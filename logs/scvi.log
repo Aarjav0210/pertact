@@ -1,0 +1,35 @@
+INFO: Seed set to 0
+00:42:57 lightning.fabric.utilities.seed INFO Seed set to 0
+INFO: GPU available: True (mps), used: False
+00:42:58 lightning.pytorch.utilities.rank_zero INFO GPU available: True (mps), used: False
+INFO: TPU available: False, using: 0 TPU cores
+00:42:58 lightning.pytorch.utilities.rank_zero INFO TPU available: False, using: 0 TPU cores
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/trainer/setup.py:175: GPU available but not used. You can set it by doing `Trainer(accelerator='gpu')`.
+INFO: 💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+00:42:58 lightning.pytorch.utilities.rank_zero INFO 💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+INFO: `Trainer.fit` stopped: `max_epochs=200` reached.
+08:32:29 lightning.pytorch.utilities.rank_zero INFO `Trainer.fit` stopped: `max_epochs=200` reached.
+08:32:29 encoders INFO scVI-10: 200 epochs, final train ELBO 2525.6, val ELBO 2540.8
+[34mINFO    [0m Input AnnData not setup with scvi-tools. attempting to transfer AnnData
+         setup                                                                  
+INFO: Seed set to 0
+08:32:35 lightning.fabric.utilities.seed INFO Seed set to 0
+INFO: GPU available: True (mps), used: False
+08:32:36 lightning.pytorch.utilities.rank_zero INFO GPU available: True (mps), used: False
+INFO: TPU available: False, using: 0 TPU cores
+08:32:36 lightning.pytorch.utilities.rank_zero INFO TPU available: False, using: 0 TPU cores
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/trainer/setup.py:175: GPU available but not used. You can set it by doing `Trainer(accelerator='gpu')`.
+INFO: 💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+08:32:36 lightning.pytorch.utilities.rank_zero INFO 💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+INFO: `Trainer.fit` stopped: `max_epochs=200` reached.
+09:04:46 lightning.pytorch.utilities.rank_zero INFO `Trainer.fit` stopped: `max_epochs=200` reached.
+09:04:46 encoders INFO scVI-30: 200 epochs, final train ELBO 2525.7, val ELBO 2538.0
+[34mINFO    [0m Input AnnData not setup with scvi-tools. attempting to transfer AnnData
+         setup                                                                  
+09:04:51 encoders INFO saved ['X_scvi10', 'X_scvi30'] -> /Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/data/processed/state_embeddings.npz

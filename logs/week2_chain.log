@@ -1,0 +1,35 @@
+20:48:43 infonce INFO X_pca_g seed 0 tau 0.01: 3400 steps, best val loss 14.9075 (chance 5.5452), 7s
+20:48:45 infonce INFO   val instance retrieval: MRR 0.1733, recall@10 0.333, same-perturbation@10 0.232
+20:48:47 infonce INFO X_pca_g seed 0 tau 0.03: 1400 steps, best val loss 5.4748 (chance 5.5452), 3s
+20:48:49 infonce INFO   val instance retrieval: MRR 0.1830, recall@10 0.343, same-perturbation@10 0.256
+20:48:56 infonce INFO X_pca_g seed 0 tau 0.1: 3700 steps, best val loss 3.1807 (chance 5.5452), 7s
+20:48:57 infonce INFO   val instance retrieval: MRR 0.1758, recall@10 0.351, same-perturbation@10 0.380
+20:49:04 infonce INFO X_pca_g seed 0 tau 0.3: 3700 steps, best val loss 3.5080 (chance 5.5452), 7s
+20:49:06 infonce INFO   val instance retrieval: MRR 0.1007, recall@10 0.218, same-perturbation@10 0.475
+20:49:10 infonce INFO X_scvi30 seed 0 tau 0.01: 2000 steps, best val loss 15.0963 (chance 5.5452), 4s
+20:49:11 infonce INFO   val instance retrieval: MRR 0.1536, recall@10 0.305, same-perturbation@10 0.165
+20:49:15 infonce INFO X_scvi30 seed 0 tau 0.03: 2000 steps, best val loss 5.4214 (chance 5.5452), 4s
+20:49:16 infonce INFO   val instance retrieval: MRR 0.1574, recall@10 0.311, same-perturbation@10 0.173
+20:49:20 infonce INFO X_scvi30 seed 0 tau 0.1: 2000 steps, best val loss 3.0564 (chance 5.5452), 4s
+20:49:22 infonce INFO   val instance retrieval: MRR 0.1726, recall@10 0.337, same-perturbation@10 0.244
+20:49:26 infonce INFO X_scvi30 seed 0 tau 0.3: 2200 steps, best val loss 3.6154 (chance 5.5452), 4s
+20:49:27 infonce INFO   val instance retrieval: MRR 0.1023, recall@10 0.216, same-perturbation@10 0.324
+20:49:27 infonce INFO best tau: {'X_pca_g': 0.03, 'X_scvi30': 0.1}
+20:49:39 infonce INFO X_pca_g seed 0 tau 0.03: 1400 steps, best val loss 5.4748 (chance 5.5452), 3s
+20:49:41 infonce INFO X_pca_g seed 1 tau 0.03: 1400 steps, best val loss 5.3676 (chance 5.5452), 2s
+20:49:44 infonce INFO X_pca_g seed 2 tau 0.03: 1500 steps, best val loss 5.3750 (chance 5.5452), 3s
+20:49:47 infonce INFO X_scvi30 seed 0 tau 0.1: 2000 steps, best val loss 3.0564 (chance 5.5452), 4s
+20:49:54 infonce INFO X_scvi30 seed 1 tau 0.1: 3800 steps, best val loss 3.1047 (chance 5.5452), 7s
+20:49:59 infonce INFO X_scvi30 seed 2 tau 0.1: 2800 steps, best val loss 3.1175 (chance 5.5452), 5s
+20:50:12 retrieval INFO X_pca_g   mean_shift           s0 | val instance MRR 0.316 R@10 0.232 same@10 0.115
+20:50:16 retrieval INFO X_pca_g   zero                 s0 | val instance MRR 0.019 R@10 0.051 same@10 0.016
+20:50:21 retrieval INFO X_pca_g   shuffled_mean_shift  s0 | val instance MRR 0.056 R@10 0.047 same@10 0.016
+20:50:26 retrieval INFO X_pca_g   infonce              s0 | val instance MRR 0.309 R@10 0.343 same@10 0.256
+20:50:31 retrieval INFO X_pca_g   infonce              s1 | val instance MRR 0.308 R@10 0.339 same@10 0.251
+20:50:35 retrieval INFO X_pca_g   infonce              s2 | val instance MRR 0.305 R@10 0.343 same@10 0.259
+20:50:40 retrieval INFO X_scvi30  mean_shift           s0 | val instance MRR 0.374 R@10 0.266 same@10 0.126
+20:50:44 retrieval INFO X_scvi30  zero                 s0 | val instance MRR 0.019 R@10 0.064 same@10 0.017
+20:50:49 retrieval INFO X_scvi30  shuffled_mean_shift  s0 | val instance MRR 0.054 R@10 0.052 same@10 0.016
+20:50:53 retrieval INFO X_scvi30  infonce              s0 | val instance MRR 0.326 R@10 0.337 same@10 0.244
+20:50:58 retrieval INFO X_scvi30  infonce              s1 | val instance MRR 0.324 R@10 0.345 same@10 0.248
+20:51:02 retrieval INFO X_scvi30  infonce              s2 | val instance MRR 0.325 R@10 0.336 same@10 0.244

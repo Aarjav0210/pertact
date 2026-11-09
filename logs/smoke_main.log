@@ -1,0 +1,25 @@
+22:39:23 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+22:39:26 evaluate INFO onehot/latent_additive seed 0: 53 epochs (best 44), 135s | val:pearson_delta_de20=0.965
+22:39:27 evaluate INFO onehot/latent_additive seed 1: 39 epochs (best 30), 91s | val:pearson_delta_de20=0.958
+22:39:28 evaluate INFO onehot/latent_additive seed 2: 42 epochs (best 33), 82s | val:pearson_delta_de20=0.955
+22:44:41 evaluate INFO onehot/decoder_only seed 0: 85 epochs (best 76), 310s | val:pearson_delta_de20=0.969
+22:47:52 evaluate INFO onehot/decoder_only seed 1: 67 epochs (best 58), 191s | val:pearson_delta_de20=0.965
+22:49:32 evaluate INFO onehot/decoder_only seed 2: 33 epochs (best 24), 98s | val:pearson_delta_de20=0.967
+22:49:34 evaluate INFO pca_loadings/latent_additive seed 0: 67 epochs (best 58), 126s | val:pearson_delta_de20=0.964
+22:49:34 evaluate INFO pca_loadings/latent_additive seed 1: 69 epochs (best 60), 156s | val:pearson_delta_de20=0.967
+22:49:35 evaluate INFO pca_loadings/latent_additive seed 2: 82 epochs (best 73), 184s | val:pearson_delta_de20=0.966
+22:54:20 evaluate INFO pca_loadings/decoder_only seed 0: 85 epochs (best 76), 284s | val:pearson_delta_de20=0.968
+22:57:42 evaluate INFO pca_loadings/decoder_only seed 1: 78 epochs (best 69), 201s | val:pearson_delta_de20=0.969
+23:01:10 evaluate INFO pca_loadings/decoder_only seed 2: 81 epochs (best 72), 208s | val:pearson_delta_de20=0.968
+23:03:18 evaluate INFO infonce_scaled_per_action_pca/latent_additive seed 0: 41 epochs (best 32), 127s | val:pearson_delta_de20=0.930
+23:06:10 evaluate INFO infonce_scaled_per_action_pca/latent_additive seed 1: 55 epochs (best 46), 171s | val:pearson_delta_de20=0.947
+23:32:06 evaluate INFO infonce_scaled_per_action_pca/latent_additive seed 2: 71 epochs (best 62), 1555s | val:pearson_delta_de20=0.956
+00:16:04 evaluate INFO infonce_scaled_per_action_pca/decoder_only seed 0: 48 epochs (best 44), 2637s | val:pearson_delta_de20=0.958
+00:18:32 evaluate INFO infonce_scaled_per_action_pca/decoder_only seed 1: 54 epochs (best 45), 147s | val:pearson_delta_de20=0.957
+00:19:58 evaluate INFO infonce_scaled_per_action_pca/decoder_only seed 2: 33 epochs (best 24), 85s | val:pearson_delta_de20=0.951
+00:22:41 evaluate INFO infonce_scaled_per_action_scvi/latent_additive seed 0: 50 epochs (best 41), 162s | val:pearson_delta_de20=0.922
+00:26:21 evaluate INFO infonce_scaled_per_action_scvi/latent_additive seed 1: 67 epochs (best 58), 218s | val:pearson_delta_de20=0.939
+00:30:02 evaluate INFO infonce_scaled_per_action_scvi/latent_additive seed 2: 70 epochs (best 61), 220s | val:pearson_delta_de20=0.948
+00:32:12 evaluate INFO infonce_scaled_per_action_scvi/decoder_only seed 0: 50 epochs (best 41), 129s | val:pearson_delta_de20=0.960
+00:34:34 evaluate INFO infonce_scaled_per_action_scvi/decoder_only seed 1: 69 epochs (best 60), 141s | val:pearson_delta_de20=0.964
+00:35:25 evaluate INFO infonce_scaled_per_action_scvi/decoder_only seed 2: 33 epochs (best 24), 50s | val:pearson_delta_de20=0.946

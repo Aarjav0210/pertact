@@ -1,0 +1,25 @@
+08:33:53 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+08:36:37 evaluate INFO onehot/latent_additive seed 0: 53 epochs (best 44), 160s | val:pearson_delta_de20=0.965 test:pearson_delta_de20=0.960
+08:38:21 evaluate INFO onehot/latent_additive seed 1: 39 epochs (best 30), 100s | val:pearson_delta_de20=0.958 test:pearson_delta_de20=0.962
+08:41:14 evaluate INFO onehot/latent_additive seed 2: 42 epochs (best 33), 169s | val:pearson_delta_de20=0.955 test:pearson_delta_de20=0.960
+08:43:49 evaluate INFO onehot/decoder_only seed 0: 60 epochs (best 58), 153s | val:pearson_delta_de20=0.967 test:pearson_delta_de20=0.962
+08:45:55 evaluate INFO onehot/decoder_only seed 1: 60 epochs (best 58), 124s | val:pearson_delta_de20=0.965 test:pearson_delta_de20=0.961
+08:47:03 evaluate INFO onehot/decoder_only seed 2: 33 epochs (best 24), 65s | val:pearson_delta_de20=0.967 test:pearson_delta_de20=0.961
+08:49:29 evaluate INFO pca_loadings/latent_additive seed 0: 60 epochs (best 58), 144s | val:pearson_delta_de20=0.964 test:pearson_delta_de20=0.917
+08:51:51 evaluate INFO pca_loadings/latent_additive seed 1: 60 epochs (best 58), 140s | val:pearson_delta_de20=0.961 test:pearson_delta_de20=0.922
+08:54:15 evaluate INFO pca_loadings/latent_additive seed 2: 60 epochs (best 58), 142s | val:pearson_delta_de20=0.968 test:pearson_delta_de20=0.925
+08:56:22 evaluate INFO pca_loadings/decoder_only seed 0: 60 epochs (best 58), 125s | val:pearson_delta_de20=0.966 test:pearson_delta_de20=0.914
+08:58:37 evaluate INFO pca_loadings/decoder_only seed 1: 60 epochs (best 58), 133s | val:pearson_delta_de20=0.966 test:pearson_delta_de20=0.915
+09:00:51 evaluate INFO pca_loadings/decoder_only seed 2: 60 epochs (best 58), 132s | val:pearson_delta_de20=0.969 test:pearson_delta_de20=0.915
+09:02:24 evaluate INFO genept/latent_additive seed 0: 37 epochs (best 28), 91s | val:pearson_delta_de20=0.935 test:pearson_delta_de20=0.940
+09:04:56 evaluate INFO genept/latent_additive seed 1: 60 epochs (best 58), 151s | val:pearson_delta_de20=0.961 test:pearson_delta_de20=0.955
+09:06:57 evaluate INFO genept/latent_additive seed 2: 57 epochs (best 48), 120s | val:pearson_delta_de20=0.959 test:pearson_delta_de20=0.955
+09:08:24 evaluate INFO genept/decoder_only seed 0: 50 epochs (best 41), 86s | val:pearson_delta_de20=0.959 test:pearson_delta_de20=0.952
+09:09:54 evaluate INFO genept/decoder_only seed 1: 54 epochs (best 45), 88s | val:pearson_delta_de20=0.963 test:pearson_delta_de20=0.959
+09:10:51 evaluate INFO genept/decoder_only seed 2: 33 epochs (best 24), 56s | val:pearson_delta_de20=0.946 test:pearson_delta_de20=0.949
+09:11:55 evaluate INFO string_n2v/latent_additive seed 0: 34 epochs (best 25), 63s | val:pearson_delta_de20=0.883 test:pearson_delta_de20=0.888
+09:13:09 evaluate INFO string_n2v/latent_additive seed 1: 41 epochs (best 32), 73s | val:pearson_delta_de20=0.871 test:pearson_delta_de20=0.885
+09:14:49 evaluate INFO string_n2v/latent_additive seed 2: 57 epochs (best 48), 99s | val:pearson_delta_de20=0.840 test:pearson_delta_de20=0.886
+09:15:46 evaluate INFO string_n2v/decoder_only seed 0: 39 epochs (best 30), 56s | val:pearson_delta_de20=0.825 test:pearson_delta_de20=0.887
+09:17:13 evaluate INFO string_n2v/decoder_only seed 1: 58 epochs (best 49), 86s | val:pearson_delta_de20=0.858 test:pearson_delta_de20=0.898
+09:18:44 evaluate INFO string_n2v/decoder_only seed 2: 60 epochs (best 53), 90s | val:pearson_delta_de20=0.849 test:pearson_delta_de20=0.901

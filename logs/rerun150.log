@@ -1,0 +1,12 @@
+09:36:58 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+09:39:31 evaluate INFO pca_loadings/latent_additive seed 0: 67 epochs (best 58), 151s | val:pearson_delta_de20=0.964 test:pearson_delta_de20=0.917
+09:41:50 evaluate INFO pca_loadings/latent_additive seed 1: 69 epochs (best 60), 138s | val:pearson_delta_de20=0.967 test:pearson_delta_de20=0.926
+09:44:35 evaluate INFO pca_loadings/latent_additive seed 2: 82 epochs (best 73), 164s | val:pearson_delta_de20=0.966 test:pearson_delta_de20=0.926
+09:46:51 evaluate INFO pca_loadings/decoder_only seed 0: 85 epochs (best 76), 135s | val:pearson_delta_de20=0.968 test:pearson_delta_de20=0.919
+09:48:57 evaluate INFO pca_loadings/decoder_only seed 1: 78 epochs (best 69), 125s | val:pearson_delta_de20=0.969 test:pearson_delta_de20=0.920
+09:51:21 evaluate INFO pca_loadings/decoder_only seed 2: 81 epochs (best 72), 143s | val:pearson_delta_de20=0.968 test:pearson_delta_de20=0.910
+09:51:32 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+09:53:44 evaluate INFO onehot/decoder_only seed 0: 85 epochs (best 76), 131s | val:pearson_delta_de20=0.969 test:pearson_delta_de20=0.965
+09:55:29 evaluate INFO onehot/decoder_only seed 1: 67 epochs (best 58), 103s | val:pearson_delta_de20=0.965 test:pearson_delta_de20=0.961
+09:55:38 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+09:57:50 evaluate INFO genept/latent_additive seed 1: 67 epochs (best 58), 129s | val:pearson_delta_de20=0.961 test:pearson_delta_de20=0.955

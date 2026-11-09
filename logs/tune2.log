@@ -1,0 +1,14 @@
+08:20:02 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 512, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.001}
+08:21:56 evaluate INFO onehot/latent_additive seed 0: 50 epochs (best 41), 112s | val:pearson_delta_de20=0.962
+08:21:56 evaluate INFO tune {'hidden_dim': 512, 'latent_dim': 128, 'dropout': 0.0, 'lr': 0.001} -> {'mse_all': 0.0013, 'mse_de20': 0.0088, 'pearson_delta_all': 0.7543, 'pearson_delta_de20': 0.9619}
+08:23:43 evaluate INFO onehot/latent_additive seed 0: 53 epochs (best 52), 106s | val:pearson_delta_de20=0.951
+08:23:43 evaluate INFO tune {'hidden_dim': 512, 'latent_dim': 128, 'dropout': 0.0, 'lr': 0.0003} -> {'mse_all': 0.0013, 'mse_de20': 0.0099, 'pearson_delta_all': 0.7521, 'pearson_delta_de20': 0.9512}
+08:26:02 evaluate INFO onehot/latent_additive seed 0: 40 epochs (best 31), 138s | val:pearson_delta_de20=0.958
+08:26:02 evaluate INFO tune {'hidden_dim': 1024, 'latent_dim': 64, 'dropout': 0.0, 'lr': 0.001} -> {'mse_all': 0.0014, 'mse_de20': 0.0098, 'pearson_delta_all': 0.7356, 'pearson_delta_de20': 0.9576}
+08:29:03 evaluate INFO onehot/latent_additive seed 0: 53 epochs (best 44), 179s | val:pearson_delta_de20=0.964
+08:29:03 evaluate INFO tune {'hidden_dim': 1024, 'latent_dim': 64, 'dropout': 0.0, 'lr': 0.0003} -> {'mse_all': 0.0013, 'mse_de20': 0.0085, 'pearson_delta_all': 0.7517, 'pearson_delta_de20': 0.9636}
+08:31:15 evaluate INFO onehot/latent_additive seed 0: 41 epochs (best 32), 131s | val:pearson_delta_de20=0.961
+08:31:15 evaluate INFO tune {'hidden_dim': 1024, 'latent_dim': 128, 'dropout': 0.0, 'lr': 0.001} -> {'mse_all': 0.0014, 'mse_de20': 0.0086, 'pearson_delta_all': 0.7412, 'pearson_delta_de20': 0.961}
+08:33:36 evaluate INFO onehot/latent_additive seed 0: 53 epochs (best 44), 140s | val:pearson_delta_de20=0.965
+08:33:36 evaluate INFO tune {'hidden_dim': 1024, 'latent_dim': 128, 'dropout': 0.0, 'lr': 0.0003} -> {'mse_all': 0.0013, 'mse_de20': 0.0082, 'pearson_delta_all': 0.7515, 'pearson_delta_de20': 0.9646}
+08:33:36 evaluate INFO best: {'hidden_dim': 1024, 'latent_dim': 128, 'dropout': 0.0, 'lr': 0.0003}

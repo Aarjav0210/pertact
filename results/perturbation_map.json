@@ -1,0 +1,2024 @@
+{
+ "shape": [
+  90867,
+  5028
+ ],
+ "n_singles": 105,
+ "n_designed_doubles": 131,
+ "n_test_doubles": 127,
+ "genes_in_doubles": 73,
+ "double_genes_without_single": [],
+ "singles": [
+  {
+   "gene": "AHR",
+   "n": 466,
+   "train": 373,
+   "val": 93,
+   "n_doubles": 2,
+   "target_delta": 0.271
+  },
+  {
+   "gene": "ARID1A",
+   "n": 176,
+   "train": 141,
+   "val": 35,
+   "n_doubles": 0,
+   "target_delta": 0.106
+  },
+  {
+   "gene": "ARRDC3",
+   "n": 397,
+   "train": 318,
+   "val": 79,
+   "n_doubles": 0,
+   "target_delta": 0.088
+  },
+  {
+   "gene": "ATL1",
+   "n": 301,
+   "train": 241,
+   "val": 60,
+   "n_doubles": 0,
+   "target_delta": 0.014
+  },
+  {
+   "gene": "BAK1",
+   "n": 1149,
+   "train": 919,
+   "val": 230,
+   "n_doubles": 3,
+   "target_delta": 0.539
+  },
+  {
+   "gene": "BCL2L11",
+   "n": 454,
+   "train": 363,
+   "val": 91,
+   "n_doubles": 2,
+   "target_delta": 0.42
+  },
+  {
+   "gene": "BCORL1",
+   "n": 449,
+   "train": 359,
+   "val": 90,
+   "n_doubles": 0,
+   "target_delta": 0.263
+  },
+  {
+   "gene": "BPGM",
+   "n": 388,
+   "train": 310,
+   "val": 78,
+   "n_doubles": 2,
+   "target_delta": 0.54
+  },
+  {
+   "gene": "C19orf26",
+   "n": 736,
+   "train": 589,
+   "val": 147,
+   "n_doubles": 1,
+   "target_delta": 0.314
+  },
+  {
+   "gene": "C3orf72",
+   "n": 212,
+   "train": 170,
+   "val": 42,
+   "n_doubles": 1,
+   "target_delta": 0.005
+  },
+  {
+   "gene": "CBFA2T3",
+   "n": 525,
+   "train": 420,
+   "val": 105,
+   "n_doubles": 3,
+   "target_delta": 0.193
+  },
+  {
+   "gene": "CBL",
+   "n": 522,
+   "train": 418,
+   "val": 104,
+   "n_doubles": 6,
+   "target_delta": 0.253
+  },
+  {
+   "gene": "CDKN1A",
+   "n": 274,
+   "train": 219,
+   "val": 55,
+   "n_doubles": 2,
+   "target_delta": 0.732
+  },
+  {
+   "gene": "CDKN1B",
+   "n": 405,
+   "train": 324,
+   "val": 81,
+   "n_doubles": 2,
+   "target_delta": 0.023
+  },
+  {
+   "gene": "CDKN1C",
+   "n": 163,
+   "train": 130,
+   "val": 33,
+   "n_doubles": 2,
+   "target_delta": 0.587
+  },
+  {
+   "gene": "CEBPA",
+   "n": 385,
+   "train": 308,
+   "val": 77,
+   "n_doubles": 5,
+   "target_delta": 0.593
+  },
+  {
+   "gene": "CEBPB",
+   "n": 401,
+   "train": 321,
+   "val": 80,
+   "n_doubles": 8,
+   "target_delta": 0.266
+  },
+  {
+   "gene": "CEBPE",
+   "n": 1008,
+   "train": 806,
+   "val": 202,
+   "n_doubles": 11,
+   "target_delta": 1.569
+  },
+  {
+   "gene": "CELF2",
+   "n": 384,
+   "train": 307,
+   "val": 77,
+   "n_doubles": 0,
+   "target_delta": -0.053
+  },
+  {
+   "gene": "CITED1",
+   "n": 165,
+   "train": 132,
+   "val": 33,
+   "n_doubles": 0,
+   "target_delta": 0.474
+  },
+  {
+   "gene": "CKS1B",
+   "n": 180,
+   "train": 144,
+   "val": 36,
+   "n_doubles": 0,
+   "target_delta": -0.086
+  },
+  {
+   "gene": "CLDN6",
+   "n": 529,
+   "train": 423,
+   "val": 106,
+   "n_doubles": 1,
+   "target_delta": 1.268
+  },
+  {
+   "gene": "CNN1",
+   "n": 624,
+   "train": 499,
+   "val": 125,
+   "n_doubles": 6,
+   "target_delta": 1.027
+  },
+  {
+   "gene": "CNNM4",
+   "n": 372,
+   "train": 298,
+   "val": 74,
+   "n_doubles": 0,
+   "target_delta": 0.054
+  },
+  {
+   "gene": "COL1A1",
+   "n": 249,
+   "train": 199,
+   "val": 50,
+   "n_doubles": 0,
+   "target_delta": 1.794
+  },
+  {
+   "gene": "COL2A1",
+   "n": 467,
+   "train": 374,
+   "val": 93,
+   "n_doubles": 1,
+   "target_delta": 1.819
+  },
+  {
+   "gene": "CSRNP1",
+   "n": 350,
+   "train": 280,
+   "val": 70,
+   "n_doubles": 0,
+   "target_delta": 0.212
+  },
+  {
+   "gene": "DLX2",
+   "n": 594,
+   "train": 475,
+   "val": 119,
+   "n_doubles": 2,
+   "target_delta": 0.38
+  },
+  {
+   "gene": "DUSP9",
+   "n": 644,
+   "train": 515,
+   "val": 129,
+   "n_doubles": 6,
+   "target_delta": 1.293
+  },
+  {
+   "gene": "EGR1",
+   "n": 256,
+   "train": 205,
+   "val": 51,
+   "n_doubles": 0,
+   "target_delta": 0.101
+  },
+  {
+   "gene": "ELMSAN1",
+   "n": 767,
+   "train": 614,
+   "val": 153,
+   "n_doubles": 4,
+   "target_delta": 0.158
+  },
+  {
+   "gene": "ETS2",
+   "n": 1010,
+   "train": 808,
+   "val": 202,
+   "n_doubles": 9,
+   "target_delta": 0.371
+  },
+  {
+   "gene": "FEV",
+   "n": 624,
+   "train": 499,
+   "val": 125,
+   "n_doubles": 4,
+   "target_delta": 1.514
+  },
+  {
+   "gene": "FOSB",
+   "n": 498,
+   "train": 398,
+   "val": 100,
+   "n_doubles": 6,
+   "target_delta": 0.05
+  },
+  {
+   "gene": "FOXA1",
+   "n": 750,
+   "train": 600,
+   "val": 150,
+   "n_doubles": 5,
+   "target_delta": 0.147
+  },
+  {
+   "gene": "FOXA3",
+   "n": 396,
+   "train": 317,
+   "val": 79,
+   "n_doubles": 4,
+   "target_delta": 0.292
+  },
+  {
+   "gene": "FOXF1",
+   "n": 703,
+   "train": 562,
+   "val": 141,
+   "n_doubles": 4,
+   "target_delta": 0.072
+  },
+  {
+   "gene": "FOXL2",
+   "n": 531,
+   "train": 425,
+   "val": 106,
+   "n_doubles": 8,
+   "target_delta": 0.521
+  },
+  {
+   "gene": "FOXO4",
+   "n": 183,
+   "train": 146,
+   "val": 37,
+   "n_doubles": 0,
+   "target_delta": 0.482
+  },
+  {
+   "gene": "GLB1L2",
+   "n": 377,
+   "train": 302,
+   "val": 75,
+   "n_doubles": 0,
+   "target_delta": 0.199
+  },
+  {
+   "gene": "HES7",
+   "n": 109,
+   "train": 87,
+   "val": 22,
+   "n_doubles": 0,
+   "target_delta": 1.9
+  },
+  {
+   "gene": "HK2",
+   "n": 244,
+   "train": 195,
+   "val": 49,
+   "n_doubles": 0,
+   "target_delta": 0.584
+  },
+  {
+   "gene": "HNF4A",
+   "n": 195,
+   "train": 156,
+   "val": 39,
+   "n_doubles": 0,
+   "target_delta": 0.354
+  },
+  {
+   "gene": "HOXA13",
+   "n": 221,
+   "train": 177,
+   "val": 44,
+   "n_doubles": 0,
+   "target_delta": 0.337
+  },
+  {
+   "gene": "HOXB9",
+   "n": 590,
+   "train": 472,
+   "val": 118,
+   "n_doubles": 4,
+   "target_delta": 0.835
+  },
+  {
+   "gene": "HOXC13",
+   "n": 326,
+   "train": 261,
+   "val": 65,
+   "n_doubles": 1,
+   "target_delta": 0.394
+  },
+  {
+   "gene": "IER5L",
+   "n": 322,
+   "train": 258,
+   "val": 64,
+   "n_doubles": 1,
+   "target_delta": 0.478
+  },
+  {
+   "gene": "IGDCC3",
+   "n": 498,
+   "train": 398,
+   "val": 100,
+   "n_doubles": 6,
+   "target_delta": 0.973
+  },
+  {
+   "gene": "IKZF3",
+   "n": 555,
+   "train": 444,
+   "val": 111,
+   "n_doubles": 5,
+   "target_delta": 0.289
+  },
+  {
+   "gene": "IRF1",
+   "n": 326,
+   "train": 261,
+   "val": 65,
+   "n_doubles": 1,
+   "target_delta": 0.54
+  },
+  {
+   "gene": "ISL2",
+   "n": 483,
+   "train": 386,
+   "val": 97,
+   "n_doubles": 1,
+   "target_delta": 0.139
+  },
+  {
+   "gene": "JUN",
+   "n": 231,
+   "train": 185,
+   "val": 46,
+   "n_doubles": 2,
+   "target_delta": 0.681
+  },
+  {
+   "gene": "KIAA1804",
+   "n": 210,
+   "train": 168,
+   "val": 42,
+   "n_doubles": 0,
+   "target_delta": 0.178
+  },
+  {
+   "gene": "KIF18B",
+   "n": 206,
+   "train": 165,
+   "val": 41,
+   "n_doubles": 1,
+   "target_delta": 0.241
+  },
+  {
+   "gene": "KIF2C",
+   "n": 510,
+   "train": 408,
+   "val": 102,
+   "n_doubles": 1,
+   "target_delta": 0.751
+  },
+  {
+   "gene": "KLF1",
+   "n": 1625,
+   "train": 1300,
+   "val": 325,
+   "n_doubles": 11,
+   "target_delta": 0.817
+  },
+  {
+   "gene": "KMT2A",
+   "n": 185,
+   "train": 148,
+   "val": 37,
+   "n_doubles": 0,
+   "target_delta": 0.548
+  },
+  {
+   "gene": "LHX1",
+   "n": 337,
+   "train": 270,
+   "val": 67,
+   "n_doubles": 1,
+   "target_delta": 1.824
+  },
+  {
+   "gene": "LYL1",
+   "n": 353,
+   "train": 282,
+   "val": 71,
+   "n_doubles": 2,
+   "target_delta": 1.18
+  },
+  {
+   "gene": "MAML2",
+   "n": 499,
+   "train": 399,
+   "val": 100,
+   "n_doubles": 0,
+   "target_delta": 0.148
+  },
+  {
+   "gene": "MAP2K3",
+   "n": 449,
+   "train": 359,
+   "val": 90,
+   "n_doubles": 4,
+   "target_delta": 0.442
+  },
+  {
+   "gene": "MAP2K6",
+   "n": 730,
+   "train": 584,
+   "val": 146,
+   "n_doubles": 5,
+   "target_delta": 0.054
+  },
+  {
+   "gene": "MAP4K3",
+   "n": 294,
+   "train": 235,
+   "val": 59,
+   "n_doubles": 0,
+   "target_delta": 0.088
+  },
+  {
+   "gene": "MAP4K5",
+   "n": 293,
+   "train": 234,
+   "val": 59,
+   "n_doubles": 0,
+   "target_delta": 0.047
+  },
+  {
+   "gene": "MAP7D1",
+   "n": 630,
+   "train": 504,
+   "val": 126,
+   "n_doubles": 2,
+   "target_delta": 0.934
+  },
+  {
+   "gene": "MAPK1",
+   "n": 647,
+   "train": 518,
+   "val": 129,
+   "n_doubles": 8,
+   "target_delta": 0.51
+  },
+  {
+   "gene": "MEIS1",
+   "n": 674,
+   "train": 539,
+   "val": 135,
+   "n_doubles": 1,
+   "target_delta": 0.056
+  },
+  {
+   "gene": "MIDN",
+   "n": 246,
+   "train": 197,
+   "val": 49,
+   "n_doubles": 0,
+   "target_delta": 0.434
+  },
+  {
+   "gene": "NCL",
+   "n": 195,
+   "train": 156,
+   "val": 39,
+   "n_doubles": 0,
+   "target_delta": 0.622
+  },
+  {
+   "gene": "NIT1",
+   "n": 158,
+   "train": 126,
+   "val": 32,
+   "n_doubles": 0,
+   "target_delta": 0.119
+  },
+  {
+   "gene": "OSR2",
+   "n": 832,
+   "train": 666,
+   "val": 166,
+   "n_doubles": 4,
+   "target_delta": 0.572
+  },
+  {
+   "gene": "PLK4",
+   "n": 95,
+   "train": 76,
+   "val": 19,
+   "n_doubles": 1,
+   "target_delta": 0.029
+  },
+  {
+   "gene": "POU3F2",
+   "n": 310,
+   "train": 248,
+   "val": 62,
+   "n_doubles": 2,
+   "target_delta": 0.661
+  },
+  {
+   "gene": "PRDM1",
+   "n": 261,
+   "train": 209,
+   "val": 52,
+   "n_doubles": 1,
+   "target_delta": 0.269
+  },
+  {
+   "gene": "PRTG",
+   "n": 579,
+   "train": 463,
+   "val": 116,
+   "n_doubles": 5,
+   "target_delta": 0.452
+  },
+  {
+   "gene": "PTPN1",
+   "n": 333,
+   "train": 266,
+   "val": 67,
+   "n_doubles": 0,
+   "target_delta": 0.291
+  },
+  {
+   "gene": "PTPN12",
+   "n": 353,
+   "train": 282,
+   "val": 71,
+   "n_doubles": 12,
+   "target_delta": 0.412
+  },
+  {
+   "gene": "PTPN13",
+   "n": 217,
+   "train": 174,
+   "val": 43,
+   "n_doubles": 0,
+   "target_delta": 0.104
+  },
+  {
+   "gene": "PTPN9",
+   "n": 357,
+   "train": 286,
+   "val": 71,
+   "n_doubles": 3,
+   "target_delta": 0.369
+  },
+  {
+   "gene": "RHOXF2",
+   "n": 279,
+   "train": 223,
+   "val": 56,
+   "n_doubles": 2,
+   "target_delta": 0.042
+  },
+  {
+   "gene": "RREB1",
+   "n": 273,
+   "train": 218,
+   "val": 55,
+   "n_doubles": 0,
+   "target_delta": 0.14
+  },
+  {
+   "gene": "RUNX1T1",
+   "n": 623,
+   "train": 498,
+   "val": 125,
+   "n_doubles": 1,
+   "target_delta": 0.371
+  },
+  {
+   "gene": "S1PR2",
+   "n": 437,
+   "train": 350,
+   "val": 87,
+   "n_doubles": 1,
+   "target_delta": 0.118
+  },
+  {
+   "gene": "SAMD1",
+   "n": 414,
+   "train": 331,
+   "val": 83,
+   "n_doubles": 5,
+   "target_delta": 0.299
+  },
+  {
+   "gene": "SET",
+   "n": 777,
+   "train": 622,
+   "val": 155,
+   "n_doubles": 4,
+   "target_delta": 0.507
+  },
+  {
+   "gene": "SGK1",
+   "n": 432,
+   "train": 346,
+   "val": 86,
+   "n_doubles": 3,
+   "target_delta": 0.542
+  },
+  {
+   "gene": "SLC38A2",
+   "n": 278,
+   "train": 222,
+   "val": 56,
+   "n_doubles": 1,
+   "target_delta": 0.32
+  },
+  {
+   "gene": "SLC4A1",
+   "n": 826,
+   "train": 661,
+   "val": 165,
+   "n_doubles": 0,
+   "target_delta": 0.363
+  },
+  {
+   "gene": "SLC6A9",
+   "n": 436,
+   "train": 349,
+   "val": 87,
+   "n_doubles": 0,
+   "target_delta": 0.354
+  },
+  {
+   "gene": "SNAI1",
+   "n": 372,
+   "train": 298,
+   "val": 74,
+   "n_doubles": 5,
+   "target_delta": 0.126
+  },
+  {
+   "gene": "SPI1",
+   "n": 488,
+   "train": 390,
+   "val": 98,
+   "n_doubles": 2,
+   "target_delta": 0.564
+  },
+  {
+   "gene": "STIL",
+   "n": 258,
+   "train": 206,
+   "val": 52,
+   "n_doubles": 1,
+   "target_delta": 0.166
+  },
+  {
+   "gene": "TBX2",
+   "n": 553,
+   "train": 442,
+   "val": 111,
+   "n_doubles": 2,
+   "target_delta": 0.382
+  },
+  {
+   "gene": "TBX3",
+   "n": 552,
+   "train": 442,
+   "val": 110,
+   "n_doubles": 2,
+   "target_delta": 0.202
+  },
+  {
+   "gene": "TGFBR2",
+   "n": 529,
+   "train": 423,
+   "val": 106,
+   "n_doubles": 9,
+   "target_delta": 0.178
+  },
+  {
+   "gene": "TMSB4X",
+   "n": 456,
+   "train": 365,
+   "val": 91,
+   "n_doubles": 1,
+   "target_delta": 2.144
+  },
+  {
+   "gene": "TP73",
+   "n": 208,
+   "train": 166,
+   "val": 42,
+   "n_doubles": 0,
+   "target_delta": 0.144
+  },
+  {
+   "gene": "TSC22D1",
+   "n": 374,
+   "train": 299,
+   "val": 75,
+   "n_doubles": 0,
+   "target_delta": 0.828
+  },
+  {
+   "gene": "UBASH3A",
+   "n": 669,
+   "train": 535,
+   "val": 134,
+   "n_doubles": 4,
+   "target_delta": 0.108
+  },
+  {
+   "gene": "UBASH3B",
+   "n": 968,
+   "train": 774,
+   "val": 194,
+   "n_doubles": 10,
+   "target_delta": 0.333
+  },
+  {
+   "gene": "ZBTB1",
+   "n": 587,
+   "train": 470,
+   "val": 117,
+   "n_doubles": 2,
+   "target_delta": 0.018
+  },
+  {
+   "gene": "ZBTB10",
+   "n": 133,
+   "train": 106,
+   "val": 27,
+   "n_doubles": 4,
+   "target_delta": 0.157
+  },
+  {
+   "gene": "ZBTB25",
+   "n": 582,
+   "train": 466,
+   "val": 116,
+   "n_doubles": 4,
+   "target_delta": 0.004
+  },
+  {
+   "gene": "ZC3HAV1",
+   "n": 432,
+   "train": 346,
+   "val": 86,
+   "n_doubles": 3,
+   "target_delta": 0.713
+  },
+  {
+   "gene": "ZNF318",
+   "n": 536,
+   "train": 429,
+   "val": 107,
+   "n_doubles": 1,
+   "target_delta": 0.18
+  }
+ ],
+ "doubles": [
+  {
+   "name": "AHR+FEV",
+   "a": "AHR",
+   "b": "FEV",
+   "n": 239,
+   "status": "test"
+  },
+  {
+   "name": "AHR+KLF1",
+   "a": "AHR",
+   "b": "KLF1",
+   "n": 402,
+   "status": "test"
+  },
+  {
+   "name": "BAK1+BCL2L11",
+   "a": "BAK1",
+   "b": "BCL2L11",
+   "n": 153,
+   "status": "test"
+  },
+  {
+   "name": "BAK1+KLF1",
+   "a": "BAK1",
+   "b": "KLF1",
+   "n": 317,
+   "status": "test"
+  },
+  {
+   "name": "BAK1+TMSB4X",
+   "a": "BAK1",
+   "b": "TMSB4X",
+   "n": 262,
+   "status": "test"
+  },
+  {
+   "name": "BCL2L11+TGFBR2",
+   "a": "BCL2L11",
+   "b": "TGFBR2",
+   "n": 369,
+   "status": "test"
+  },
+  {
+   "name": "BPGM+SAMD1",
+   "a": "BPGM",
+   "b": "SAMD1",
+   "n": 233,
+   "status": "test"
+  },
+  {
+   "name": "BPGM+ZBTB1",
+   "a": "BPGM",
+   "b": "ZBTB1",
+   "n": 280,
+   "status": "test"
+  },
+  {
+   "name": "C19orf26+TGFBR2",
+   "a": "C19orf26",
+   "b": "TGFBR2",
+   "n": 258,
+   "status": "test"
+  },
+  {
+   "name": "CBFA2T3+FEV",
+   "a": "CBFA2T3",
+   "b": "FEV",
+   "n": 136,
+   "status": "test"
+  },
+  {
+   "name": "CBFA2T3+POU3F2",
+   "a": "CBFA2T3",
+   "b": "POU3F2",
+   "n": 192,
+   "status": "test"
+  },
+  {
+   "name": "CBFA2T3+PRDM1",
+   "a": "CBFA2T3",
+   "b": "PRDM1",
+   "n": 92,
+   "status": "test"
+  },
+  {
+   "name": "CBL+CNN1",
+   "a": "CBL",
+   "b": "CNN1",
+   "n": 279,
+   "status": "test"
+  },
+  {
+   "name": "CBL+PTPN12",
+   "a": "CBL",
+   "b": "PTPN12",
+   "n": 252,
+   "status": "test"
+  },
+  {
+   "name": "CBL+PTPN9",
+   "a": "CBL",
+   "b": "PTPN9",
+   "n": 225,
+   "status": "test"
+  },
+  {
+   "name": "CBL+TGFBR2",
+   "a": "CBL",
+   "b": "TGFBR2",
+   "n": 154,
+   "status": "test"
+  },
+  {
+   "name": "CBL+UBASH3B",
+   "a": "CBL",
+   "b": "UBASH3B",
+   "n": 310,
+   "status": "test"
+  },
+  {
+   "name": "CDKN1A+CDKN1B",
+   "a": "CDKN1A",
+   "b": "CDKN1B",
+   "n": 98,
+   "status": "test"
+  },
+  {
+   "name": "CDKN1A+CDKN1C",
+   "a": "CDKN1A",
+   "b": "CDKN1C",
+   "n": 80,
+   "status": "test"
+  },
+  {
+   "name": "CDKN1B+CDKN1C",
+   "a": "CDKN1B",
+   "b": "CDKN1C",
+   "n": 78,
+   "status": "test"
+  },
+  {
+   "name": "CEBPA+CEBPB",
+   "a": "CEBPA",
+   "b": "CEBPB",
+   "n": 50,
+   "status": "test"
+  },
+  {
+   "name": "CEBPA+CEBPE",
+   "a": "CEBPA",
+   "b": "CEBPE",
+   "n": 140,
+   "status": "test"
+  },
+  {
+   "name": "CEBPA+KLF1",
+   "a": "CEBPA",
+   "b": "KLF1",
+   "n": 267,
+   "status": "test"
+  },
+  {
+   "name": "CEBPA+ZC3HAV1",
+   "a": "CEBPA",
+   "b": "ZC3HAV1",
+   "n": 81,
+   "status": "test"
+  },
+  {
+   "name": "CEBPB+CEBPE",
+   "a": "CEBPB",
+   "b": "CEBPE",
+   "n": 90,
+   "status": "test"
+  },
+  {
+   "name": "CEBPB+FOSB",
+   "a": "CEBPB",
+   "b": "FOSB",
+   "n": 65,
+   "status": "test"
+  },
+  {
+   "name": "CEBPB+LYL1",
+   "a": "CEBPB",
+   "b": "LYL1",
+   "n": 156,
+   "status": "test"
+  },
+  {
+   "name": "CEBPB+MAPK1",
+   "a": "CEBPB",
+   "b": "MAPK1",
+   "n": 331,
+   "status": "test"
+  },
+  {
+   "name": "CEBPB+OSR2",
+   "a": "CEBPB",
+   "b": "OSR2",
+   "n": 185,
+   "status": "test"
+  },
+  {
+   "name": "CEBPB+PTPN12",
+   "a": "CEBPB",
+   "b": "PTPN12",
+   "n": 262,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+CNN1",
+   "a": "CEBPE",
+   "b": "CNN1",
+   "n": 190,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+ETS2",
+   "a": "CEBPE",
+   "b": "ETS2",
+   "n": 313,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+FOSB",
+   "a": "CEBPE",
+   "b": "FOSB",
+   "n": 124,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+KLF1",
+   "a": "CEBPE",
+   "b": "KLF1",
+   "n": 381,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+PTPN12",
+   "a": "CEBPE",
+   "b": "PTPN12",
+   "n": 309,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+RUNX1T1",
+   "a": "CEBPE",
+   "b": "RUNX1T1",
+   "n": 1001,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+SET",
+   "a": "CEBPE",
+   "b": "SET",
+   "n": 519,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+SPI1",
+   "a": "CEBPE",
+   "b": "SPI1",
+   "n": 149,
+   "status": "test"
+  },
+  {
+   "name": "CEBPE+ZC3HAV1",
+   "a": "CEBPE",
+   "b": "ZC3HAV1",
+   "n": 340,
+   "status": "test"
+  },
+  {
+   "name": "CLDN6+KLF1",
+   "a": "CLDN6",
+   "b": "KLF1",
+   "n": 207,
+   "status": "test"
+  },
+  {
+   "name": "CNN1+ETS2",
+   "a": "CNN1",
+   "b": "ETS2",
+   "n": 769,
+   "status": "test"
+  },
+  {
+   "name": "CNN1+MAPK1",
+   "a": "CNN1",
+   "b": "MAPK1",
+   "n": 312,
+   "status": "test"
+  },
+  {
+   "name": "CNN1+UBASH3A",
+   "a": "CNN1",
+   "b": "UBASH3A",
+   "n": 137,
+   "status": "test"
+  },
+  {
+   "name": "CNN1+UBASH3B",
+   "a": "CNN1",
+   "b": "UBASH3B",
+   "n": 340,
+   "status": "test"
+  },
+  {
+   "name": "COL2A1+KLF1",
+   "a": "COL2A1",
+   "b": "KLF1",
+   "n": 246,
+   "status": "test"
+  },
+  {
+   "name": "DLX2+SNAI1",
+   "a": "DLX2",
+   "b": "SNAI1",
+   "n": 98,
+   "status": "test"
+  },
+  {
+   "name": "DLX2+ZBTB10",
+   "a": "DLX2",
+   "b": "ZBTB10",
+   "n": 73,
+   "status": "test"
+  },
+  {
+   "name": "DUSP9+ETS2",
+   "a": "DUSP9",
+   "b": "ETS2",
+   "n": 679,
+   "status": "test"
+  },
+  {
+   "name": "DUSP9+IGDCC3",
+   "a": "DUSP9",
+   "b": "IGDCC3",
+   "n": 314,
+   "status": "test"
+  },
+  {
+   "name": "DUSP9+KLF1",
+   "a": "DUSP9",
+   "b": "KLF1",
+   "n": 314,
+   "status": "test"
+  },
+  {
+   "name": "DUSP9+MAPK1",
+   "a": "DUSP9",
+   "b": "MAPK1",
+   "n": 244,
+   "status": "test"
+  },
+  {
+   "name": "DUSP9+PRTG",
+   "a": "DUSP9",
+   "b": "PRTG",
+   "n": 236,
+   "status": "test"
+  },
+  {
+   "name": "DUSP9+SNAI1",
+   "a": "DUSP9",
+   "b": "SNAI1",
+   "n": 158,
+   "status": "test"
+  },
+  {
+   "name": "ELMSAN1+LHX1",
+   "a": "ELMSAN1",
+   "b": "LHX1",
+   "n": 535,
+   "status": "test"
+  },
+  {
+   "name": "ELMSAN1+MAP2K3",
+   "a": "ELMSAN1",
+   "b": "MAP2K3",
+   "n": 476,
+   "status": "test"
+  },
+  {
+   "name": "ELMSAN1+MAP2K6",
+   "a": "ELMSAN1",
+   "b": "MAP2K6",
+   "n": 359,
+   "status": "test"
+  },
+  {
+   "name": "ELMSAN1+ZBTB10",
+   "a": "ELMSAN1",
+   "b": "ZBTB10",
+   "n": 151,
+   "status": "test"
+  },
+  {
+   "name": "ETS2+IGDCC3",
+   "a": "ETS2",
+   "b": "IGDCC3",
+   "n": 361,
+   "status": "test"
+  },
+  {
+   "name": "ETS2+IKZF3",
+   "a": "ETS2",
+   "b": "IKZF3",
+   "n": 380,
+   "status": "test"
+  },
+  {
+   "name": "ETS2+MAP7D1",
+   "a": "ETS2",
+   "b": "MAP7D1",
+   "n": 261,
+   "status": "test"
+  },
+  {
+   "name": "ETS2+MAPK1",
+   "a": "ETS2",
+   "b": "MAPK1",
+   "n": 411,
+   "status": "test"
+  },
+  {
+   "name": "ETS2+PRTG",
+   "a": "ETS2",
+   "b": "PRTG",
+   "n": 348,
+   "status": "test"
+  },
+  {
+   "name": "ETS2+TGFBR2",
+   "a": "ETS2",
+   "b": "TGFBR2",
+   "n": 271,
+   "status": "test"
+  },
+  {
+   "name": "FEV+ISL2",
+   "a": "FEV",
+   "b": "ISL2",
+   "n": 257,
+   "status": "test"
+  },
+  {
+   "name": "FEV+MAP7D1",
+   "a": "FEV",
+   "b": "MAP7D1",
+   "n": 233,
+   "status": "test"
+  },
+  {
+   "name": "FOSB+IKZF3",
+   "a": "FOSB",
+   "b": "IKZF3",
+   "n": 196,
+   "status": "test"
+  },
+  {
+   "name": "FOSB+OSR2",
+   "a": "FOSB",
+   "b": "OSR2",
+   "n": 321,
+   "status": "test"
+  },
+  {
+   "name": "FOSB+PTPN12",
+   "a": "FOSB",
+   "b": "PTPN12",
+   "n": 282,
+   "status": "test"
+  },
+  {
+   "name": "FOSB+UBASH3B",
+   "a": "FOSB",
+   "b": "UBASH3B",
+   "n": 355,
+   "status": "test"
+  },
+  {
+   "name": "FOXA1+FOXA3",
+   "a": "FOXA1",
+   "b": "FOXA3",
+   "n": 179,
+   "status": "test"
+  },
+  {
+   "name": "FOXA1+FOXF1",
+   "a": "FOXA1",
+   "b": "FOXF1",
+   "n": 235,
+   "status": "test"
+  },
+  {
+   "name": "FOXA1+FOXL2",
+   "a": "FOXA1",
+   "b": "FOXL2",
+   "n": 166,
+   "status": "test"
+  },
+  {
+   "name": "FOXA1+HOXB9",
+   "a": "FOXA1",
+   "b": "HOXB9",
+   "n": 250,
+   "status": "test"
+  },
+  {
+   "name": "FOXA1+KLF1",
+   "a": "FOXA1",
+   "b": "KLF1",
+   "n": 319,
+   "status": "test"
+  },
+  {
+   "name": "FOXA3+FOXF1",
+   "a": "FOXA3",
+   "b": "FOXF1",
+   "n": 142,
+   "status": "test"
+  },
+  {
+   "name": "FOXA3+FOXL2",
+   "a": "FOXA3",
+   "b": "FOXL2",
+   "n": 97,
+   "status": "test"
+  },
+  {
+   "name": "FOXA3+HOXB9",
+   "a": "FOXA3",
+   "b": "HOXB9",
+   "n": 279,
+   "status": "test"
+  },
+  {
+   "name": "FOXF1+FOXL2",
+   "a": "FOXF1",
+   "b": "FOXL2",
+   "n": 162,
+   "status": "test"
+  },
+  {
+   "name": "FOXF1+HOXB9",
+   "a": "FOXF1",
+   "b": "HOXB9",
+   "n": 165,
+   "status": "test"
+  },
+  {
+   "name": "FOXL2+HOXB9",
+   "a": "FOXL2",
+   "b": "HOXB9",
+   "n": 80,
+   "status": "test"
+  },
+  {
+   "name": "FOXL2+MEIS1",
+   "a": "FOXL2",
+   "b": "MEIS1",
+   "n": 171,
+   "status": "test"
+  },
+  {
+   "name": "FOXL2+POU3F2",
+   "a": "FOXL2",
+   "b": "POU3F2",
+   "n": 270,
+   "status": "test"
+  },
+  {
+   "name": "FOXL2+ZNF318",
+   "a": "FOXL2",
+   "b": "ZNF318",
+   "n": 193,
+   "status": "test"
+  },
+  {
+   "name": "HOXC13+ZC3HAV1",
+   "a": "HOXC13",
+   "b": "ZC3HAV1",
+   "n": 531,
+   "status": "test"
+  },
+  {
+   "name": "IER5L+LYL1",
+   "a": "IER5L",
+   "b": "LYL1",
+   "n": 521,
+   "status": "test"
+  },
+  {
+   "name": "IGDCC3+MAPK1",
+   "a": "IGDCC3",
+   "b": "MAPK1",
+   "n": 284,
+   "status": "test"
+  },
+  {
+   "name": "IGDCC3+PRTG",
+   "a": "IGDCC3",
+   "b": "PRTG",
+   "n": 107,
+   "status": "test"
+  },
+  {
+   "name": "IGDCC3+TGFBR2",
+   "a": "IGDCC3",
+   "b": "TGFBR2",
+   "n": 258,
+   "status": "test"
+  },
+  {
+   "name": "IGDCC3+ZBTB25",
+   "a": "IGDCC3",
+   "b": "ZBTB25",
+   "n": 98,
+   "status": "test"
+  },
+  {
+   "name": "IKZF3+MAP2K3",
+   "a": "IKZF3",
+   "b": "MAP2K3",
+   "n": 217,
+   "status": "test"
+  },
+  {
+   "name": "IKZF3+MAP2K6",
+   "a": "IKZF3",
+   "b": "MAP2K6",
+   "n": 248,
+   "status": "test"
+  },
+  {
+   "name": "IKZF3+MAPK1",
+   "a": "IKZF3",
+   "b": "MAPK1",
+   "n": 253,
+   "status": "test"
+  },
+  {
+   "name": "IRF1+SET",
+   "a": "IRF1",
+   "b": "SET",
+   "n": 362,
+   "status": "test"
+  },
+  {
+   "name": "KIF18B+KIF2C",
+   "a": "KIF18B",
+   "b": "KIF2C",
+   "n": 78,
+   "status": "test"
+  },
+  {
+   "name": "KLF1+MAP2K6",
+   "a": "KLF1",
+   "b": "MAP2K6",
+   "n": 217,
+   "status": "test"
+  },
+  {
+   "name": "KLF1+SET",
+   "a": "KLF1",
+   "b": "SET",
+   "n": 537,
+   "status": "test"
+  },
+  {
+   "name": "KLF1+TGFBR2",
+   "a": "KLF1",
+   "b": "TGFBR2",
+   "n": 258,
+   "status": "test"
+  },
+  {
+   "name": "MAP2K3+MAP2K6",
+   "a": "MAP2K3",
+   "b": "MAP2K6",
+   "n": 453,
+   "status": "test"
+  },
+  {
+   "name": "MAP2K3+SLC38A2",
+   "a": "MAP2K3",
+   "b": "SLC38A2",
+   "n": 296,
+   "status": "test"
+  },
+  {
+   "name": "MAP2K6+SPI1",
+   "a": "MAP2K6",
+   "b": "SPI1",
+   "n": 239,
+   "status": "test"
+  },
+  {
+   "name": "MAPK1+PRTG",
+   "a": "MAPK1",
+   "b": "PRTG",
+   "n": 375,
+   "status": "test"
+  },
+  {
+   "name": "MAPK1+TGFBR2",
+   "a": "MAPK1",
+   "b": "TGFBR2",
+   "n": 382,
+   "status": "test"
+  },
+  {
+   "name": "OSR2+PTPN12",
+   "a": "OSR2",
+   "b": "PTPN12",
+   "n": 276,
+   "status": "test"
+  },
+  {
+   "name": "OSR2+UBASH3B",
+   "a": "OSR2",
+   "b": "UBASH3B",
+   "n": 666,
+   "status": "test"
+  },
+  {
+   "name": "PLK4+STIL",
+   "a": "PLK4",
+   "b": "STIL",
+   "n": 60,
+   "status": "test"
+  },
+  {
+   "name": "PRTG+TGFBR2",
+   "a": "PRTG",
+   "b": "TGFBR2",
+   "n": 206,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+PTPN9",
+   "a": "PTPN12",
+   "b": "PTPN9",
+   "n": 288,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+SAMD1",
+   "a": "PTPN12",
+   "b": "SAMD1",
+   "n": 281,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+SNAI1",
+   "a": "PTPN12",
+   "b": "SNAI1",
+   "n": 237,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+UBASH3A",
+   "a": "PTPN12",
+   "b": "UBASH3A",
+   "n": 247,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+UBASH3B",
+   "a": "PTPN12",
+   "b": "UBASH3B",
+   "n": 249,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+ZBTB10",
+   "a": "PTPN12",
+   "b": "ZBTB10",
+   "n": 218,
+   "status": "test"
+  },
+  {
+   "name": "PTPN12+ZBTB25",
+   "a": "PTPN12",
+   "b": "ZBTB25",
+   "n": 253,
+   "status": "test"
+  },
+  {
+   "name": "PTPN9+UBASH3B",
+   "a": "PTPN9",
+   "b": "UBASH3B",
+   "n": 278,
+   "status": "test"
+  },
+  {
+   "name": "RHOXF2+SET",
+   "a": "RHOXF2",
+   "b": "SET",
+   "n": 259,
+   "status": "test"
+  },
+  {
+   "name": "RHOXF2+ZBTB25",
+   "a": "RHOXF2",
+   "b": "ZBTB25",
+   "n": 202,
+   "status": "test"
+  },
+  {
+   "name": "S1PR2+SGK1",
+   "a": "S1PR2",
+   "b": "SGK1",
+   "n": 301,
+   "status": "test"
+  },
+  {
+   "name": "SAMD1+TGFBR2",
+   "a": "SAMD1",
+   "b": "TGFBR2",
+   "n": 57,
+   "status": "test"
+  },
+  {
+   "name": "SAMD1+UBASH3B",
+   "a": "SAMD1",
+   "b": "UBASH3B",
+   "n": 197,
+   "status": "test"
+  },
+  {
+   "name": "SAMD1+ZBTB1",
+   "a": "SAMD1",
+   "b": "ZBTB1",
+   "n": 152,
+   "status": "test"
+  },
+  {
+   "name": "SGK1+TBX2",
+   "a": "SGK1",
+   "b": "TBX2",
+   "n": 277,
+   "status": "test"
+  },
+  {
+   "name": "SGK1+TBX3",
+   "a": "SGK1",
+   "b": "TBX3",
+   "n": 239,
+   "status": "test"
+  },
+  {
+   "name": "SNAI1+UBASH3B",
+   "a": "SNAI1",
+   "b": "UBASH3B",
+   "n": 249,
+   "status": "test"
+  },
+  {
+   "name": "SNAI1+ZBTB10",
+   "a": "SNAI1",
+   "b": "ZBTB10",
+   "n": 81,
+   "status": "test"
+  },
+  {
+   "name": "TBX2+TBX3",
+   "a": "TBX2",
+   "b": "TBX3",
+   "n": 940,
+   "status": "test"
+  },
+  {
+   "name": "UBASH3A+UBASH3B",
+   "a": "UBASH3A",
+   "b": "UBASH3B",
+   "n": 421,
+   "status": "test"
+  },
+  {
+   "name": "UBASH3B+ZBTB25",
+   "a": "UBASH3B",
+   "b": "ZBTB25",
+   "n": 224,
+   "status": "test"
+  },
+  {
+   "name": "C3orf72+FOXL2",
+   "a": "C3orf72",
+   "b": "FOXL2",
+   "n": 46,
+   "status": "dropped"
+  },
+  {
+   "name": "CBL+UBASH3A",
+   "a": "CBL",
+   "b": "UBASH3A",
+   "n": 48,
+   "status": "dropped"
+  },
+  {
+   "name": "CEBPA+JUN",
+   "a": "CEBPA",
+   "b": "JUN",
+   "n": 49,
+   "status": "dropped"
+  },
+  {
+   "name": "CEBPB+JUN",
+   "a": "CEBPB",
+   "b": "JUN",
+   "n": 46,
+   "status": "dropped"
+  }
+ ],
+ "examples": [
+  {
+   "barcode": "AGACGTTGTCTAGCGC",
+   "guide_id": "NegCtrl10_NegCtrl0",
+   "condition": "control",
+   "gemgroup": "2",
+   "split": "train",
+   "umis": 21172,
+   "genes": 4312,
+   "expr": {
+    "KLF1": [
+     1,
+     0.39
+    ],
+    "SET": [
+     22,
+     2.43
+    ],
+    "CEBPE": [
+     0,
+     0.0
+    ],
+    "HBG2": [
+     11,
+     1.82
+    ],
+    "HBZ": [
+     7,
+     1.46
+    ],
+    "GATA1": [
+     1,
+     0.39
+    ]
+   }
+  },
+  {
+   "barcode": "CAGTAACCAGCCTTGG",
+   "guide_id": "KLF1_NegCtrl0",
+   "condition": "KLF1",
+   "gemgroup": "5",
+   "split": "train",
+   "umis": 29419,
+   "genes": 4590,
+   "expr": {
+    "KLF1": [
+     7,
+     1.22
+    ],
+    "SET": [
+     54,
+     2.96
+    ],
+    "CEBPE": [
+     0,
+     0.0
+    ],
+    "HBG2": [
+     173,
+     4.09
+    ],
+    "HBZ": [
+     197,
+     4.22
+    ],
+    "GATA1": [
+     2,
+     0.52
+    ]
+   }
+  },
+  {
+   "barcode": "CCTTCCCTCCGTCATC",
+   "guide_id": "SET_KLF1",
+   "condition": "KLF1+SET",
+   "gemgroup": "4",
+   "split": "test",
+   "umis": 38454,
+   "genes": 5385,
+   "expr": {
+    "KLF1": [
+     10,
+     1.28
+    ],
+    "SET": [
+     54,
+     2.71
+    ],
+    "CEBPE": [
+     0,
+     0.0
+    ],
+    "HBG2": [
+     11,
+     1.35
+    ],
+    "HBZ": [
+     14,
+     1.53
+    ],
+    "GATA1": [
+     0,
+     0.0
+    ]
+   }
+  },
+  {
+   "barcode": "AACTCAGAGACTGGGT",
+   "guide_id": "CEBPE_RUNX1T1",
+   "condition": "CEBPE+RUNX1T1",
+   "gemgroup": "5",
+   "split": "test",
+   "umis": 22491,
+   "genes": 4026,
+   "expr": {
+    "KLF1": [
+     0,
+     0.0
+    ],
+    "SET": [
+     32,
+     2.72
+    ],
+    "CEBPE": [
+     1,
+     0.37
+    ],
+    "HBG2": [
+     5,
+     1.17
+    ],
+    "HBZ": [
+     1,
+     0.37
+    ],
+    "GATA1": [
+     5,
+     1.17
+    ]
+   }
+  }
+ ],
+ "snippet_genes": [
+  "KLF1",
+  "SET",
+  "CEBPE",
+  "HBG2",
+  "HBZ",
+  "GATA1"
+ ],
+ "condition_means": [
+  {
+   "condition": "control",
+   "n_cells": 9687,
+   "mean": {
+    "KLF1": 0.405,
+    "SET": 2.42,
+    "CEBPE": 0.014,
+    "RUNX1T1": 0.0,
+    "HBG2": 1.731,
+    "HBZ": 1.703,
+    "GATA1": 0.617
+   }
+  },
+  {
+   "condition": "KLF1",
+   "n_cells": 1625,
+   "mean": {
+    "KLF1": 1.222,
+    "SET": 2.438,
+    "CEBPE": 0.012,
+    "RUNX1T1": 0.0,
+    "HBG2": 2.997,
+    "HBZ": 3.262,
+    "GATA1": 0.53
+   }
+  },
+  {
+   "condition": "SET",
+   "n_cells": 777,
+   "mean": {
+    "KLF1": 0.537,
+    "SET": 2.911,
+    "CEBPE": 0.01,
+    "RUNX1T1": 0.002,
+    "HBG2": 1.548,
+    "HBZ": 1.311,
+    "GATA1": 0.825
+   }
+  },
+  {
+   "condition": "KLF1+SET",
+   "n_cells": 537,
+   "mean": {
+    "KLF1": 1.416,
+    "SET": 2.962,
+    "CEBPE": 0.005,
+    "RUNX1T1": 0.0,
+    "HBG2": 3.269,
+    "HBZ": 3.317,
+    "GATA1": 0.662
+   }
+  },
+  {
+   "condition": "CEBPE",
+   "n_cells": 1008,
+   "mean": {
+    "KLF1": 0.235,
+    "SET": 1.994,
+    "CEBPE": 1.592,
+    "RUNX1T1": 0.0,
+    "HBG2": 0.896,
+    "HBZ": 0.928,
+    "GATA1": 0.607
+   }
+  },
+  {
+   "condition": "RUNX1T1",
+   "n_cells": 623,
+   "mean": {
+    "KLF1": 0.393,
+    "SET": 2.388,
+    "CEBPE": 0.007,
+    "RUNX1T1": 0.364,
+    "HBG2": 1.424,
+    "HBZ": 1.331,
+    "GATA1": 0.608
+   }
+  },
+  {
+   "condition": "CEBPE+RUNX1T1",
+   "n_cells": 1001,
+   "mean": {
+    "KLF1": 0.273,
+    "SET": 2.234,
+    "CEBPE": 1.138,
+    "RUNX1T1": 0.315,
+    "HBG2": 0.933,
+    "HBZ": 1.031,
+    "GATA1": 0.639
+   }
+  }
+ ],
+ "mean_genes": [
+  "KLF1",
+  "SET",
+  "CEBPE",
+  "RUNX1T1",
+  "HBG2",
+  "HBZ",
+  "GATA1"
+ ]
+}

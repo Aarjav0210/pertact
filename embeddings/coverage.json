@@ -1,0 +1,91 @@
+{
+ "onehot": {
+  "dim": 105,
+  "n_covered": 105,
+  "n_missing": 0,
+  "missing": [],
+  "match": {}
+ },
+ "pca_loadings": {
+  "dim": 32,
+  "n_covered": 105,
+  "n_missing": 0,
+  "missing": [],
+  "match": {
+   "C19orf26": "CBARP",
+   "C3orf72": "FOXL2NB",
+   "KIAA1804": "RP5-862P8.2"
+  },
+  "k": 32,
+  "n_train_perturbations": 105,
+  "explained_variance_ratio_k": 0.8848358392715454
+ },
+ "genept": {
+  "dim": 1536,
+  "n_covered": 105,
+  "n_missing": 0,
+  "missing": [],
+  "match": {
+   "KIAA1804": "MAP3K21"
+  },
+  "source": "GenePT_gene_embedding_ada_text.pickle",
+  "vocab_size": 93800,
+  "row_norm_mean": 1.0
+ },
+ "string_n2v": {
+  "dim": 64,
+  "n_covered": 93,
+  "n_missing": 12,
+  "missing": [
+   "C19orf26",
+   "C3orf72",
+   "FEV",
+   "GLB1L2",
+   "HES7",
+   "IER5L",
+   "MAP7D1",
+   "MIDN",
+   "PRTG",
+   "ZBTB1",
+   "ZBTB10",
+   "ZNF318"
+  ],
+  "match": {
+   "KIAA1804": "preferred_name:ENSP00000355583"
+  },
+  "graph": {
+   "n_directed_rows_raw": 13715404,
+   "n_directed_rows_kept": 473860,
+   "n_undirected_edges": 236930,
+   "n_nodes": 16201,
+   "min_combined_score": 700,
+   "edge_weight": "combined_score / 1000"
+  },
+  "node2vec": {
+   "dim": 64,
+   "walk_length": 80,
+   "num_walks": 10,
+   "window": 10,
+   "p": 1.0,
+   "q": 1.0,
+   "epochs": 1,
+   "workers": 1
+  },
+  "seed": 0,
+  "missing_reason": {
+   "C19orf26": "ENSP00000465260 has no edge with score >= 700",
+   "C3orf72": "ENSP00000372651 has no edge with score >= 700",
+   "FEV": "ENSP00000295727 has no edge with score >= 700",
+   "GLB1L2": "ENSP00000444628 has no edge with score >= 700",
+   "HES7": "ENSP00000446205 has no edge with score >= 700",
+   "IER5L": "ENSP00000361569 has no edge with score >= 700",
+   "MAP7D1": "ENSP00000362244 has no edge with score >= 700",
+   "MIDN": "ENSP00000300952 has no edge with score >= 700",
+   "PRTG": "ENSP00000373937 has no edge with score >= 700",
+   "ZBTB1": "ENSP00000451000 has no edge with score >= 700",
+   "ZBTB10": "ENSP00000387462 has no edge with score >= 700",
+   "ZNF318": "ENSP00000354964 has no edge with score >= 700"
+  },
+  "edge_list": "data/interim/string_v12_edges_ge700.tsv.gz"
+ }
+}

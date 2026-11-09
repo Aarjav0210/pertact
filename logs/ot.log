@@ -1,0 +1,4 @@
+20:41:22 ot INFO X_pca_g train: 840 problems in 487s | max marginal err 1.0e-06 | median iters 140 | partner cost OT 56.6 vs random 109.4 | perplexity 74.9
+20:42:14 ot INFO X_pca_g val: 834 problems in 52s | max marginal err 1.0e-06 | median iters 110 | partner cost OT 63.3 vs random 104.6 | perplexity 32.5
+20:47:41 ot INFO X_scvi30 train: 840 problems in 327s | max marginal err 1.0e-06 | median iters 80 | partner cost OT 14.5 vs random 30.6 | perplexity 60.0
+20:48:15 ot INFO X_scvi30 val: 834 problems in 34s | max marginal err 1.0e-06 | median iters 70 | partner cost OT 16.7 vs random 29.5 | perplexity 30.2

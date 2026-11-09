@@ -1,0 +1,9 @@
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/umap/umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(
+09:07:09 encoders INFO figure /Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/figures/umap_X_pca_g.png
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/umap/umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(
+09:07:25 encoders INFO figure /Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/figures/umap_X_scvi10.png
+/Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/.venv/lib/python3.11/site-packages/umap/umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(
+09:07:41 encoders INFO figure /Users/aarjavjain/Library/Application Support/Claude/scratch-workspaces/f81b5c92-7c4d-4c1b-a293-e660d9f35eeb/7f8b13dd-fe67-4811-af4c-07547442ce6d/scratch-2026-10-30-f67459/figures/umap_X_scvi30.png

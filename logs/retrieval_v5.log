@@ -1,0 +1,60 @@
+22:39:37 retrieval INFO X_pca_g seed 0: per-action scales c_a median 0.379 (range 0.059 to 1.058)
+22:39:37 retrieval INFO X_pca_g seed 0: InfoNCE length calibration alpha = 0.426 (fitted on training pairs)
+22:39:37 retrieval INFO X_pca_g seed 0: anchored InfoNCE, least-squares alpha would be 0.864
+22:39:37 retrieval INFO X_pca_g seed 1: per-action scales c_a median 0.387 (range 0.053 to 1.073)
+22:39:37 retrieval INFO X_pca_g seed 1: InfoNCE length calibration alpha = 0.431 (fitted on training pairs)
+22:39:37 retrieval INFO X_pca_g seed 1: anchored InfoNCE, least-squares alpha would be 0.895
+22:39:37 retrieval INFO X_pca_g seed 2: per-action scales c_a median 0.392 (range 0.051 to 1.051)
+22:39:37 retrieval INFO X_pca_g seed 2: InfoNCE length calibration alpha = 0.422 (fitted on training pairs)
+22:39:37 retrieval INFO X_pca_g seed 2: anchored InfoNCE, least-squares alpha would be 0.876
+22:39:44 retrieval INFO X_pca_g   mean_shift           s0 | val instance MRR 0.120 R@10 0.232 same@10 0.115
+22:39:52 retrieval INFO X_pca_g   zero                 s0 | val instance MRR 0.026 R@10 0.051 same@10 0.016
+22:39:59 retrieval INFO X_pca_g   shuffled_mean_shift  s0 | val instance MRR 0.023 R@10 0.047 same@10 0.016
+22:40:06 retrieval INFO X_pca_g   infonce              s0 | val instance MRR 0.183 R@10 0.343 same@10 0.256
+22:40:12 retrieval INFO X_pca_g   infonce_calibrated   s0 | val instance MRR 0.082 R@10 0.165 same@10 0.067
+22:40:18 retrieval INFO X_pca_g   infonce_scaled_per_action s0 | val instance MRR 0.092 R@10 0.182 same@10 0.091
+22:40:24 retrieval INFO X_pca_g   infonce_dir_meanshift_len s0 | val instance MRR 0.113 R@10 0.221 same@10 0.116
+22:40:30 retrieval INFO X_pca_g   meanshift_dir_infonce_len s0 | val instance MRR 0.135 R@10 0.265 same@10 0.228
+22:40:37 retrieval INFO X_pca_g   infonce_anchor       s0 | val instance MRR 0.136 R@10 0.259 same@10 0.139
+22:40:43 retrieval INFO X_pca_g   infonce              s1 | val instance MRR 0.180 R@10 0.339 same@10 0.251
+22:40:49 retrieval INFO X_pca_g   infonce_calibrated   s1 | val instance MRR 0.082 R@10 0.161 same@10 0.066
+22:40:56 retrieval INFO X_pca_g   infonce_scaled_per_action s1 | val instance MRR 0.091 R@10 0.180 same@10 0.087
+22:41:01 retrieval INFO X_pca_g   infonce_dir_meanshift_len s1 | val instance MRR 0.113 R@10 0.222 same@10 0.115
+22:41:08 retrieval INFO X_pca_g   meanshift_dir_infonce_len s1 | val instance MRR 0.136 R@10 0.264 same@10 0.225
+22:41:14 retrieval INFO X_pca_g   infonce_anchor       s1 | val instance MRR 0.136 R@10 0.260 same@10 0.136
+22:41:20 retrieval INFO X_pca_g   infonce              s2 | val instance MRR 0.179 R@10 0.343 same@10 0.259
+22:41:26 retrieval INFO X_pca_g   infonce_calibrated   s2 | val instance MRR 0.082 R@10 0.162 same@10 0.067
+22:41:32 retrieval INFO X_pca_g   infonce_scaled_per_action s2 | val instance MRR 0.093 R@10 0.181 same@10 0.092
+22:41:39 retrieval INFO X_pca_g   infonce_dir_meanshift_len s2 | val instance MRR 0.115 R@10 0.221 same@10 0.117
+22:41:45 retrieval INFO X_pca_g   meanshift_dir_infonce_len s2 | val instance MRR 0.134 R@10 0.264 same@10 0.229
+22:41:55 retrieval INFO X_pca_g   infonce_anchor       s2 | val instance MRR 0.137 R@10 0.268 same@10 0.138
+22:41:55 retrieval INFO X_scvi30 seed 0: per-action scales c_a median 0.349 (range 0.041 to 0.887)
+22:41:55 retrieval INFO X_scvi30 seed 0: InfoNCE length calibration alpha = 0.425 (fitted on training pairs)
+22:41:55 retrieval INFO X_scvi30 seed 0: anchored InfoNCE, least-squares alpha would be 0.805
+22:41:55 retrieval INFO X_scvi30 seed 1: per-action scales c_a median 0.346 (range 0.041 to 0.883)
+22:41:55 retrieval INFO X_scvi30 seed 1: InfoNCE length calibration alpha = 0.414 (fitted on training pairs)
+22:41:55 retrieval INFO X_scvi30 seed 1: anchored InfoNCE, least-squares alpha would be 0.800
+22:41:55 retrieval INFO X_scvi30 seed 2: per-action scales c_a median 0.339 (range 0.041 to 0.939)
+22:41:55 retrieval INFO X_scvi30 seed 2: InfoNCE length calibration alpha = 0.419 (fitted on training pairs)
+22:41:55 retrieval INFO X_scvi30 seed 2: anchored InfoNCE, least-squares alpha would be 0.811
+22:42:02 retrieval INFO X_scvi30  mean_shift           s0 | val instance MRR 0.133 R@10 0.266 same@10 0.126
+22:42:09 retrieval INFO X_scvi30  zero                 s0 | val instance MRR 0.031 R@10 0.064 same@10 0.017
+22:42:17 retrieval INFO X_scvi30  shuffled_mean_shift  s0 | val instance MRR 0.026 R@10 0.052 same@10 0.016
+22:42:25 retrieval INFO X_scvi30  infonce              s0 | val instance MRR 0.173 R@10 0.337 same@10 0.244
+22:42:32 retrieval INFO X_scvi30  infonce_calibrated   s0 | val instance MRR 0.088 R@10 0.181 same@10 0.065
+22:42:39 retrieval INFO X_scvi30  infonce_scaled_per_action s0 | val instance MRR 0.116 R@10 0.234 same@10 0.113
+22:42:45 retrieval INFO X_scvi30  infonce_dir_meanshift_len s0 | val instance MRR 0.125 R@10 0.251 same@10 0.123
+22:42:52 retrieval INFO X_scvi30  meanshift_dir_infonce_len s0 | val instance MRR 0.167 R@10 0.326 same@10 0.248
+22:42:59 retrieval INFO X_scvi30  infonce_anchor       s0 | val instance MRR 0.153 R@10 0.298 same@10 0.160
+22:43:05 retrieval INFO X_scvi30  infonce              s1 | val instance MRR 0.176 R@10 0.345 same@10 0.248
+22:43:11 retrieval INFO X_scvi30  infonce_calibrated   s1 | val instance MRR 0.086 R@10 0.183 same@10 0.064
+22:43:17 retrieval INFO X_scvi30  infonce_scaled_per_action s1 | val instance MRR 0.117 R@10 0.236 same@10 0.113
+22:43:23 retrieval INFO X_scvi30  infonce_dir_meanshift_len s1 | val instance MRR 0.126 R@10 0.251 same@10 0.122
+22:43:29 retrieval INFO X_scvi30  meanshift_dir_infonce_len s1 | val instance MRR 0.166 R@10 0.324 same@10 0.251
+22:43:35 retrieval INFO X_scvi30  infonce_anchor       s1 | val instance MRR 0.156 R@10 0.305 same@10 0.163
+22:43:41 retrieval INFO X_scvi30  infonce              s2 | val instance MRR 0.172 R@10 0.336 same@10 0.244
+22:43:47 retrieval INFO X_scvi30  infonce_calibrated   s2 | val instance MRR 0.087 R@10 0.182 same@10 0.066
+22:43:56 retrieval INFO X_scvi30  infonce_scaled_per_action s2 | val instance MRR 0.117 R@10 0.235 same@10 0.112
+22:44:03 retrieval INFO X_scvi30  infonce_dir_meanshift_len s2 | val instance MRR 0.125 R@10 0.250 same@10 0.122
+22:44:10 retrieval INFO X_scvi30  meanshift_dir_infonce_len s2 | val instance MRR 0.166 R@10 0.325 same@10 0.249
+22:44:17 retrieval INFO X_scvi30  infonce_anchor       s2 | val instance MRR 0.151 R@10 0.297 same@10 0.152

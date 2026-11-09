@@ -1,0 +1,11 @@
+{
+ "selected_by": "smallest rho with median training-pair length ratio in [0.8, 1.25], seed 0",
+ "rho": {
+  "X_pca_g": 1.0,
+  "X_scvi30": 1.0
+ },
+ "lambda": {
+  "X_pca_g": 33.333333333333336,
+  "X_scvi30": 10.0
+ }
+}

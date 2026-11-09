@@ -1,0 +1,12 @@
+# Environment and caches
+.venv/
+__pycache__/
+*.egg-info/
+.DS_Store
+
+# Large data and trained models: kept on disk only, see README.md
+data/
+models/
+results/predictions/
+results/week2_decoder/predictions/
+embeddings/genept_all_genes.npz

@@ -1,0 +1,32 @@
+22:37:13 infonce INFO X_pca_g seed 0 tau 0.03 rho 0: 1400 steps, best val loss 5.4748 (chance 5.5452), 8s
+22:37:16 infonce INFO   rho 0: length ratio median 2.07 (0.89-10.65), anchor share of val loss 0.000, val MRR 0.183
+22:37:25 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.01: 1400 steps, best val loss 5.6630 (chance 5.5452), 8s
+22:37:28 infonce INFO   rho 0.01: length ratio median 1.98 (0.89-9.98), anchor share of val loss 0.036, val MRR 0.182
+22:37:33 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.03: 1400 steps, best val loss 6.0272 (chance 5.5452), 4s
+22:37:35 infonce INFO   rho 0.03: length ratio median 1.84 (0.88-8.90), anchor share of val loss 0.096, val MRR 0.180
+22:37:41 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.1: 2800 steps, best val loss 7.2130 (chance 5.5452), 7s
+22:37:43 infonce INFO   rho 0.1: length ratio median 1.59 (0.91-6.98), anchor share of val loss 0.240, val MRR 0.167
+22:37:50 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.3: 2800 steps, best val loss 10.4495 (chance 5.5452), 6s
+22:37:52 infonce INFO   rho 0.3: length ratio median 1.34 (0.91-4.55), anchor share of val loss 0.462, val MRR 0.154
+22:37:59 infonce INFO X_pca_g seed 0 tau 0.03 rho 1: 2800 steps, best val loss 21.3402 (chance 5.5452), 7s
+22:38:01 infonce INFO   rho 1: length ratio median 1.17 (0.94-2.79), anchor share of val loss 0.728, val MRR 0.136
+22:38:05 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0: 2000 steps, best val loss 3.0564 (chance 5.5452), 4s
+22:38:07 infonce INFO   rho 0: length ratio median 2.40 (1.09-8.95), anchor share of val loss 0.000, val MRR 0.173
+22:38:12 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.01: 2000 steps, best val loss 3.1197 (chance 5.5452), 4s
+22:38:13 infonce INFO   rho 0.01: length ratio median 2.29 (1.06-8.20), anchor share of val loss 0.019, val MRR 0.174
+22:38:19 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.03: 2000 steps, best val loss 3.2362 (chance 5.5452), 5s
+22:38:21 infonce INFO   rho 0.03: length ratio median 2.13 (1.03-7.24), anchor share of val loss 0.053, val MRR 0.174
+22:38:25 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.1: 2000 steps, best val loss 3.6081 (chance 5.5452), 4s
+22:38:27 infonce INFO   rho 0.1: length ratio median 1.84 (1.01-5.34), anchor share of val loss 0.144, val MRR 0.173
+22:38:32 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.3: 2100 steps, best val loss 4.5829 (chance 5.5452), 5s
+22:38:34 infonce INFO   rho 0.3: length ratio median 1.59 (0.94-4.04), anchor share of val loss 0.316, val MRR 0.166
+22:38:38 infonce INFO X_scvi30 seed 0 tau 0.1 rho 1: 2100 steps, best val loss 7.8322 (chance 5.5452), 5s
+22:38:40 infonce INFO   rho 1: length ratio median 1.30 (0.90-2.78), anchor share of val loss 0.590, val MRR 0.153
+22:38:40 infonce WARNING X_scvi30: no rho on the grid reached the length target; using the largest (1)
+22:38:40 infonce INFO chosen rho: {'X_pca_g': 1.0, 'X_scvi30': 1.0}
+22:38:47 infonce INFO X_pca_g seed 0 tau 0.03 rho 1: 2800 steps, best val loss 21.3402 (chance 5.5452), 7s
+22:38:50 infonce INFO X_pca_g seed 1 tau 0.03 rho 1: 1300 steps, best val loss 21.1080 (chance 5.5452), 3s
+22:38:55 infonce INFO X_pca_g seed 2 tau 0.03 rho 1: 1700 steps, best val loss 21.1767 (chance 5.5452), 4s
+22:38:59 infonce INFO X_scvi30 seed 0 tau 0.1 rho 1: 2100 steps, best val loss 7.8322 (chance 5.5452), 5s
+22:39:02 infonce INFO X_scvi30 seed 1 tau 0.1 rho 1: 1300 steps, best val loss 7.8766 (chance 5.5452), 3s
+22:39:04 infonce INFO X_scvi30 seed 2 tau 0.1 rho 1: 1100 steps, best val loss 7.9196 (chance 5.5452), 2s

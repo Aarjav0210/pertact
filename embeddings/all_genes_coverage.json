@@ -1,0 +1,40 @@
+{
+ "tiers": {
+  "all measured": {
+   "n_genes": 33694,
+   "genept": 22640,
+   "string_protein": 19507,
+   "string_n2v": 16165
+  },
+  "expressed (>= 20 training cells)": {
+   "n_genes": 17285,
+   "genept": 14416,
+   "string_protein": 13550,
+   "string_n2v": 11730
+  },
+  "model genes (5,028)": {
+   "n_genes": 5028,
+   "genept": 4323,
+   "string_protein": 4065,
+   "string_n2v": 3607
+  },
+  "perturbed targets": {
+   "n_genes": 105,
+   "genept": 105,
+   "string_protein": 105,
+   "string_n2v": 93
+  }
+ },
+ "genept_match": {
+  "symbol": 21156,
+  "missing": 11054,
+  "hgnc": 1484
+ },
+ "string_match": {
+  "ensembl_gene": 19337,
+  "missing": 14187,
+  "preferred_name": 87,
+  "alias": 83
+ },
+ "string_graph": "STRING v12 combined_score >= 700"
+}

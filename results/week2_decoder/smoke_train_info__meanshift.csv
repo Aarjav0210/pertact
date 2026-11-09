@@ -1,0 +1,13 @@
+method,decoder,seed,variant,space,best_val_mse,epochs,best_epoch,seconds,n_train_targets,n_train_conditions_dropped
+mean_shift_pca,latent_additive,0,mean_shift,X_pca_g,0.05976677435762319,50,41,235.78565287590027,44551,0
+mean_shift_pca,latent_additive,1,mean_shift,X_pca_g,0.0597523796536587,54,45,217.7494080066681,44551,0
+mean_shift_pca,latent_additive,2,mean_shift,X_pca_g,0.059895708424855316,33,24,203.44476008415222,44551,0
+mean_shift_pca,decoder_only,0,mean_shift,X_pca_g,0.059784533035118964,48,39,256.0135419368744,44551,0
+mean_shift_pca,decoder_only,1,mean_shift,X_pca_g,0.05975112030242827,54,45,236.47373914718628,44551,0
+mean_shift_pca,decoder_only,2,mean_shift,X_pca_g,0.059837324263011235,33,24,140.04119300842285,44551,0
+mean_shift_scvi,latent_additive,0,mean_shift,X_scvi30,0.05976569295819706,50,41,242.1265468597412,44551,0
+mean_shift_scvi,latent_additive,1,mean_shift,X_scvi30,0.059755541720335106,54,45,1101.350513935089,44551,0
+mean_shift_scvi,latent_additive,2,mean_shift,X_scvi30,0.05972486556699387,71,62,3391.7818529605865,44551,0
+mean_shift_scvi,decoder_only,0,mean_shift,X_scvi30,0.05978497107032955,50,41,216.27268886566162,44551,0
+mean_shift_scvi,decoder_only,1,mean_shift,X_scvi30,0.059765538961443335,54,45,231.45556712150574,44551,0
+mean_shift_scvi,decoder_only,2,mean_shift,X_scvi30,0.05983935359801027,33,24,135.29240107536316,44551,0

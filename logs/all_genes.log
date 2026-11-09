@@ -1,0 +1,4 @@
+18:43:38 embeddings INFO all measured                          33694 genes | GenePT  22640 | STRING protein  19507 | node2vec  16165
+18:43:38 embeddings INFO expressed (>= 20 training cells)      17285 genes | GenePT  14416 | STRING protein  13550 | node2vec  11730
+18:43:38 embeddings INFO model genes (5,028)                    5028 genes | GenePT   4323 | STRING protein   4065 | node2vec   3607
+18:43:38 embeddings INFO perturbed targets                       105 genes | GenePT    105 | STRING protein    105 | node2vec     93

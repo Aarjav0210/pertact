@@ -1,0 +1,125 @@
+# Week 1 config: Norman 2019 data, splits, frozen encoders, perturbation embeddings, decoders.
+seed: 0
+
+paths:
+  raw_h5ad: data/raw/scperturb/NormanWeissman2019_filtered.h5ad
+  hgnc: data/raw/hgnc/hgnc_complete_set.txt
+  genept_zip: data/raw/genept/GenePT_emebdding_v2.zip
+  string_links: data/raw/string/9606.protein.links.v12.0.txt.gz
+  string_info: data/raw/string/9606.protein.info.v12.0.txt.gz
+  string_aliases: data/raw/string/9606.protein.aliases.v12.0.txt.gz
+  qc_h5ad: data/interim/norman2019_qc_allgenes.h5ad   # cell-QC'd, all genes, counts only
+  qc_stats: data/interim/qc_stats.json
+  processed_h5ad: data/processed/norman2019.h5ad      # HVG subset, X = log1p(CP10k), layers["counts"]
+  splits: splits.json
+  embeddings_dir: embeddings
+  models_dir: models
+  figures_dir: figures
+  results_dir: results
+
+data:
+  # Cell-level guide filters (scPerturb columns from the original Norman cell_identities table)
+  require_good_coverage: true      # drop cells whose guide call has low coverage (number_of_cells == 0)
+  max_guide_identities: 1          # number_of_cells > 1 => droplet multiplet, >2 guides possible
+  control_prefix: NegCtrl          # non-targeting guide tokens look like NegCtrl0, NegCtrl10, ...
+  # Cell QC (recomputed from counts)
+  min_counts: 2000
+  min_genes: 1000
+  max_pct_mito: 15.0
+  # Perturbation filter
+  min_cells_per_perturbation: 50
+  # Gene filter (computed on training cells only, in stage 2)
+  min_cells_per_gene: 20
+  # Normalisation / HVGs
+  target_sum: 10000
+  n_hvg: 5000
+  hvg_flavor: seurat_v3            # on raw counts of training cells
+  batch_key: gemgroup
+
+splits:
+  val_frac_per_single: 0.2         # per single perturbation, cells held out for validation
+  control_fracs: {train: 0.7, val: 0.15, test: 0.15}   # stratified by gemgroup
+
+encoders:
+  pca:
+    n_comps: 50
+  scvi:
+    latent_dims: [10, 30]
+    n_hidden: 128
+    n_layers: 2
+    gene_likelihood: nb
+    max_epochs: 200
+    early_stopping: true
+    batch_size: 512
+    accelerator: cpu
+  umap:
+    n_neighbors: 15
+    n_subsample: 30000
+    highlight: [CEBPA, KLF1, CEBPE, SPI1]
+
+embeddings:
+  pca_loadings:
+    k: 32
+  genept:
+    member: GenePT_gene_embedding_ada_text.pickle   # ada-002 NCBI-summary embeddings, 1536-d
+  string:
+    min_combined_score: 700
+    dim: 64
+    walk_length: 80
+    num_walks: 10
+    window: 10
+    p: 1.0
+    q: 1.0
+    epochs: 1
+    workers: 1                      # gensim is only deterministic with one worker
+  # Applied identically to every method before the decoder: rows scaled by one global
+  # constant so the mean L2 norm over training target genes is 1 (no centering).
+  normalize: unit_mean_norm
+
+ot:
+  spaces: [X_pca_g, X_scvi30]      # frozen state spaces to pair in (both, per Week 2 decision)
+  eps_scale: 0.05                  # entropic blur epsilon = eps_scale * median squared distance between controls
+  k: 5                             # controls kept per perturbed cell (top coupling weights, renormalised)
+
+infonce:
+  P: 32                            # perturbations per batch
+  K: 8                             # OT pairs per perturbation; the other K-1 cells are same-perturbation negatives
+  lr: 0.05
+  max_steps: 6000
+  eval_every: 100
+  patience: 10                     # evaluations without validation-loss improvement
+  n_val_batches: 20
+  tau_grid: [0.01, 0.03, 0.1, 0.3] # temperature in units of the mean squared distance between random training cells
+  # Week 2 addendum, length anchor: loss += (rho / tau) * mean ||q - k_pos||² / D0. rho = anchor weight as a fraction
+  # of the pull InfoNCE's own positive logit already applies. Smallest rho meeting the target is used.
+  anchor_grid: [0.01, 0.03, 0.1, 0.3, 1.0]
+  anchor_target: [0.8, 1.25]       # median ||f(a)|| / ||mean OT shift|| on training pairs
+
+decoder:
+  state_key: X_pca_g               # frozen control-state embedding fed to enc()
+  latent_dim: 128
+  hidden_dim: 512
+  n_layers: 2
+  dropout: 0.0
+  lr: 0.001
+  weight_decay: 0.0
+  batch_size: 256
+  max_epochs: 150                  # was 60; 9 runs hit that cap (see REPORT.md), re-run with 150
+  patience: 8                      # early stopping on validation-single loss
+  include_control_targets: true    # control cells as targets with e = 0
+  device: auto
+  # One-hot / latent additive grid searched on validation singles; best values overwrite the above.
+  tune_grid:
+    hidden_dim: [512, 1024]
+    latent_dim: [64, 128]
+    dropout: [0.0]                 # 0.1 tried once (512/64/1e-3): 0.926 vs 0.954 -> dropped from grid
+    lr: [0.001, 0.0003]
+  tune_metric: pearson_delta_de20
+
+eval:
+  n_de: 20
+  n_de_store: 50                   # ranked DE genes kept, so targets can be removed and 20 remain
+  seeds: [0, 1, 2]
+  methods: [onehot, pca_loadings, genept, string_n2v]
+  decoders: [latent_additive, decoder_only]
+  n_ctrl_samples_per_pert: 500     # control inputs drawn per perturbation at prediction time

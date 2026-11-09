@@ -1,0 +1,13 @@
+00:35:36 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+00:35:37 evaluate INFO infonce_pca/latent_additive seed 0: 39 epochs (best 30), 256s | val:pearson_delta_de20=0.955
+00:35:37 evaluate INFO infonce_pca/latent_additive seed 1: 35 epochs (best 26), 236s | val:pearson_delta_de20=0.946
+00:35:38 evaluate INFO infonce_pca/latent_additive seed 2: 33 epochs (best 24), 182s | val:pearson_delta_de20=0.945
+00:35:38 evaluate INFO infonce_pca/decoder_only seed 0: 53 epochs (best 44), 242s | val:pearson_delta_de20=0.970
+00:35:38 evaluate INFO infonce_pca/decoder_only seed 1: 54 epochs (best 45), 250s | val:pearson_delta_de20=0.965
+00:35:39 evaluate INFO infonce_pca/decoder_only seed 2: 33 epochs (best 24), 157s | val:pearson_delta_de20=0.967
+00:35:39 evaluate INFO infonce_scvi/latent_additive seed 0: 50 epochs (best 41), 4114s | val:pearson_delta_de20=0.960
+00:35:40 evaluate INFO infonce_scvi/latent_additive seed 1: 39 epochs (best 38), 229s | val:pearson_delta_de20=0.955
+00:35:40 evaluate INFO infonce_scvi/latent_additive seed 2: 66 epochs (best 57), 350s | val:pearson_delta_de20=0.969
+00:35:41 evaluate INFO infonce_scvi/decoder_only seed 0: 50 epochs (best 41), 212s | val:pearson_delta_de20=0.965
+00:35:41 evaluate INFO infonce_scvi/decoder_only seed 1: 54 epochs (best 45), 138s | val:pearson_delta_de20=0.966
+00:35:41 evaluate INFO infonce_scvi/decoder_only seed 2: 33 epochs (best 24), 82s | val:pearson_delta_de20=0.964

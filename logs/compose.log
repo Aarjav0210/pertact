@@ -1,0 +1,13 @@
+18:31:27 evaluate INFO device mps | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+18:33:59 evaluate INFO onehot seed 0 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.956, pearson_int_all 0.380
+18:35:40 evaluate INFO onehot seed 1 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.959, pearson_int_all 0.384
+18:37:06 evaluate INFO onehot seed 2 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.955, pearson_int_all 0.391
+18:39:15 evaluate INFO pca_loadings seed 0 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.960, pearson_int_all 0.383
+18:41:58 evaluate INFO pca_loadings seed 1 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.959, pearson_int_all 0.391
+18:45:06 evaluate INFO pca_loadings seed 2 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.964, pearson_int_all 0.396
+18:46:26 evaluate INFO genept seed 0 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.961, pearson_int_all 0.416
+18:48:51 evaluate INFO genept seed 1 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.960, pearson_int_all 0.401
+18:50:54 evaluate INFO genept seed 2 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.958, pearson_int_all 0.399
+18:52:00 evaluate INFO string_n2v seed 0 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.917, pearson_int_all 0.385
+18:53:23 evaluate INFO string_n2v seed 1 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.908, pearson_int_all 0.384
+18:55:12 evaluate INFO string_n2v seed 2 | additive reproduces saved predictions (max |diff| 0.00e+00) | sequential: pearson_delta_de20 0.901, pearson_int_all 0.380
