@@ -25,7 +25,9 @@ PAIRS = [("infonce_scaled_per_action_pca", "infonce_unit_pca"), ("infonce_scaled
 
 
 def main():
-    rd = path(load_config(None), "results_dir")
+    """Summarise the decoder test and write the two summary files."""
+    cfg = load_config(None)
+    rd = path(cfg, "results_dir")
     out = rd / "week2_decoder"
     per = pd.concat([pd.read_csv(f) for f in sorted(glob.glob(str(out / "smoke_per_perturbation__*.csv")))])
     per = per[per.split == "val"].drop_duplicates(["method", "decoder", "seed", "condition"])
@@ -44,7 +46,7 @@ def main():
     paired = []
     for fitted, unit in PAIRS:
         for decoder in ("latent_additive", "decoder_only"):
-            for seed in (0, 1, 2):
+            for seed in cfg["eval"]["seeds"]:
                 a, b = by_seed.loc[(fitted, decoder, seed), "weak"], by_seed.loc[(unit, decoder, seed), "weak"]
                 paired.append({"fitted_lengths": fitted, "unit_length": unit, "decoder": decoder, "seed": seed,
                                "weak_fitted": a, "weak_unit": b, "improved": b > a})

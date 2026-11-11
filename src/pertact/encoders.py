@@ -3,6 +3,7 @@
     python -I -m pertact.encoders pca      # obsm["X_pca_g"] (50-d), models/pca_g.npz
     python -I -m pertact.encoders scvi     # obsm["X_scvi10"], obsm["X_scvi30"], models/scvi10/, models/scvi30/
     python -I -m pertact.encoders umap     # figures/umap_<key>.png sanity checks
+    python -I -m pertact.encoders write_h5ad   # copy the stored states into the processed h5ad
 
 State embeddings are written to data/processed/state_embeddings.npz (keyed by obsm name, rows in
 processed-h5ad order) and also into the processed h5ad's obsm.
@@ -15,21 +16,25 @@ import anndata as ad
 import numpy as np
 import scipy.sparse as sp
 
-from .config import get_logger, load_config, path, seed_everything
+from .config import get_logger, load_config, path, read_json, seed_everything
 from .data import CONTROL
 
 log = get_logger("encoders")
+PROJECT_CHUNK = 20000  # cells projected at a time, to keep the dense matrix small
 
 
 def train_mask(adata: ad.AnnData) -> np.ndarray:
+    """True for training cells."""
     return (adata.obs["split"] == "train").to_numpy()
 
 
 def state_store(cfg):
+    """The file that holds every state space, next to the model matrix."""
     return path(cfg, "processed_h5ad").with_name("state_embeddings.npz")
 
 
 def save_state(cfg, adata, keys):
+    """Add state arrays to the store, after checking that the cells are in the stored order."""
     p = state_store(cfg)
     old = dict(np.load(p, allow_pickle=False)) if p.exists() else {}
     if "obs_names" in old:
@@ -50,8 +55,30 @@ def attach_state(cfg, adata) -> ad.AnnData:
     return adata
 
 
+def load_all(cfg) -> tuple[ad.AnnData, dict]:
+    """The model matrix with every state space attached, and the split. What every later step starts from."""
+    adata = ad.read_h5ad(path(cfg, "processed_h5ad"))
+    attach_state(cfg, adata)
+    return adata, read_json(path(cfg, "splits"))
+
+
+def states(adata, space) -> np.ndarray:
+    """The state vectors of one space, one row per cell."""
+    return np.asarray(adata.obsm[space], dtype=np.float32)
+
+
+def scale_D0(S_train, seed=0, n=20000):
+    """The typical squared distance between two random training cells in a state space. Dividing by it puts
+    distances, and so the InfoNCE temperature, on the same scale in every space."""
+    rng = np.random.default_rng(seed)
+    i, j = rng.integers(0, len(S_train), n), rng.integers(0, len(S_train), n)
+    return float(((S_train[i] - S_train[j]) ** 2).sum(1).mean())
+
+
 # --------------------------------------------------------------------------- PCA
 def fit_pca(cfg, adata):
+    """Fit PCA on the training cells' log-normalised expression, project every cell with those loadings into
+    obsm['X_pca_g'], and save the mean and loadings."""
     from sklearn.decomposition import PCA
 
     n = cfg["encoders"]["pca"]["n_comps"]
@@ -61,20 +88,22 @@ def fit_pca(cfg, adata):
     pca = PCA(n_components=n, svd_solver="randomized", random_state=cfg["seed"]).fit(Xtr)
     mean = pca.mean_.astype(np.float32)
     comps = pca.components_.astype(np.float32)
-    Z = np.vstack([((X[i:i + 20000].toarray() if sp.issparse(X) else X[i:i + 20000]) - mean) @ comps.T
-                   for i in range(0, adata.n_obs, 20000)])
+    Z = np.vstack([((X[i:i + PROJECT_CHUNK].toarray() if sp.issparse(X) else X[i:i + PROJECT_CHUNK]) - mean) @ comps.T
+                   for i in range(0, adata.n_obs, PROJECT_CHUNK)])
     adata.obsm["X_pca_g"] = Z.astype(np.float32)
     out = path(cfg, "models_dir") / "pca_g.npz"
     out.parent.mkdir(parents=True, exist_ok=True)
     np.savez(out, mean=mean, components=comps, explained_variance_ratio=pca.explained_variance_ratio_,
              var_names=adata.var_names.to_numpy().astype(str))
-    log.info("PCA fit on %d train cells; explained variance (50 PCs) = %.3f", tr.sum(),
+    log.info("PCA fit on %d train cells; explained variance (%d PCs) = %.3f", tr.sum(), n,
              pca.explained_variance_ratio_.sum())
     return adata
 
 
 # --------------------------------------------------------------------------- scVI
 def fit_scvi(cfg, adata, latent_dims=None):
+    """For each latent size, train scVI from scratch on the raw counts of training cells (gem group as batch), store
+    every cell's latent mean in obsm['X_scvi<d>'], and save the model."""
     import scvi
     import torch
 
@@ -112,6 +141,8 @@ def fit_scvi(cfg, adata, latent_dims=None):
 
 # --------------------------------------------------------------------------- UMAP sanity check
 def umap_figures(cfg, adata, keys):
+    """Three sanity-check pictures per state space: control against perturbed, the highlighted strong perturbations,
+    and gem group. The UMAP is fitted on a sample of all cells and used only for these figures."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -163,6 +194,7 @@ def umap_figures(cfg, adata, keys):
 
 
 def main():
+    """Run one step."""
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["pca", "scvi", "umap", "write_h5ad"])
     ap.add_argument("--dims", type=int, nargs="*", default=None)

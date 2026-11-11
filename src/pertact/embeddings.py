@@ -11,7 +11,6 @@ and a coverage record in embeddings/coverage.json.
 from __future__ import annotations
 
 import argparse
-import gzip
 import pickle
 
 import anndata as ad
@@ -27,10 +26,12 @@ METHODS = ["onehot", "pca_loadings", "genept", "string_n2v"]
 
 # --------------------------------------------------------------------------- io
 def emb_path(cfg, method):
+    """File of one method's embedding."""
     return path(cfg, "embeddings_dir") / f"{method}.npz"
 
 
 def save_embedding(cfg, method, genes, emb, missing, how=None, extra=None):
+    """Write one embedding (vectors, covered genes, missing genes) and record its coverage in coverage.json."""
     p = emb_path(cfg, method)
     p.parent.mkdir(parents=True, exist_ok=True)
     np.savez(p, emb=np.asarray(emb, dtype=np.float32), genes=np.array(genes, dtype=str),
@@ -45,17 +46,20 @@ def save_embedding(cfg, method, genes, emb, missing, how=None, extra=None):
 
 
 def load_embedding(cfg, method) -> tuple[list[str], np.ndarray]:
+    """One saved embedding as (genes, matrix)."""
     z = np.load(emb_path(cfg, method), allow_pickle=False)
     return z["genes"].tolist(), z["emb"]
 
 
 def all_targets(splits) -> list[str]:
+    """Every gene perturbed anywhere in the data, alone or in a double."""
     conds = splits["train_singles"] + splits["test_doubles"] + splits["excluded_doubles"]
     return sorted({g for c in conds for g in condition_genes(c)})
 
 
 # --------------------------------------------------------------------------- one-hot
 def build_onehot(cfg, splits, **_):
+    """One-hot: the identity matrix over the training genes."""
     genes = sorted(splits["train_singles"])
     missing = [g for g in all_targets(splits) if g not in genes]
     save_embedding(cfg, "onehot", genes, np.eye(len(genes)), missing)
@@ -93,19 +97,6 @@ def build_pca_loadings(cfg, splits, adata=None, **_):
 
 
 # --------------------------------------------------------------------------- GenePT
-class _SafeUnpickler(pickle.Unpickler):
-    """The GenePT file is a dict {symbol: list/ndarray of floats}; refuse anything else."""
-
-    ALLOWED = {("numpy.core.multiarray", "_reconstruct"), ("numpy._core.multiarray", "_reconstruct"),
-               ("numpy", "ndarray"), ("numpy", "dtype"), ("numpy.core.multiarray", "scalar"),
-               ("numpy._core.multiarray", "scalar"), ("builtins", "list"), ("builtins", "dict")}
-
-    def find_class(self, module, name):
-        if (module, name) in self.ALLOWED:
-            return super().find_class(module, name)
-        raise pickle.UnpicklingError(f"blocked global {module}.{name} in GenePT pickle")
-
-
 def load_genept(cfg) -> dict[str, np.ndarray]:
     """GenePT vectors by symbol. The pickle unpacks to Python lists (several GB), so the first call writes a
     float32 cache (data/interim/genept_ada.npz) and later calls read that instead."""
@@ -170,7 +161,7 @@ def match_symbols(targets, vocab: set, resolver: SymbolResolver, t2v: dict):
     out, how = {}, {}
     for t in targets:
         cands = [t] + ([t2v[t]] if t2v.get(t) else []) + resolver.candidates(t)
-        for i, c in enumerate(dict.fromkeys(cands)):
+        for c in dict.fromkeys(cands):
             if c in vocab:
                 out[t] = c
                 if c != t:
@@ -180,6 +171,8 @@ def match_symbols(targets, vocab: set, resolver: SymbolResolver, t2v: dict):
 
 
 def build_genept(cfg, splits, adata=None, **_):
+    """GenePT: the text-derived vector of each perturbed gene, matched by symbol. Unmatched genes are recorded as
+    missing."""
     d = load_genept(cfg)
     dims = {v.shape for v in d.values()}
     assert len(dims) == 1, dims
@@ -213,6 +206,7 @@ def string_graph(cfg):
 
 
 def string_symbol_maps(cfg):
+    """Gene name to STRING protein id: by preferred name, and by aliases that point to exactly one protein."""
     info = pd.read_csv(path(cfg, "string_info"), sep="\t")
     info.columns = [c.lstrip("#") for c in info.columns]
     info["id"] = info.string_protein_id.str.replace("9606.", "", regex=False)
@@ -247,6 +241,8 @@ def node2vec_embed(edges: pd.DataFrame, s: dict, seed: int, tmp_edg):
 
 
 def build_string_n2v(cfg, splits, adata=None, **_):
+    """STRING node2vec: embed the whole protein network, then take the rows of the perturbed genes. A gene with no
+    protein, or no link above the score threshold, is recorded as missing with the reason."""
     s = cfg["embeddings"]["string"]
     seed_everything(cfg["seed"])
     edges, meta = string_graph(cfg)
@@ -363,7 +359,7 @@ def build_all_genes(cfg, splits, **_):
                  genes=np.array([r[0] for r in rr], dtype=str), ensembl=np.array([r[1] for r in rr], dtype=str))
 
     tiers = {"all measured": np.ones(len(uni), bool), f"expressed (>= {min_cells} training cells)": uni.expressed.to_numpy(),
-             "model genes (5,028)": uni.in_model_genes.to_numpy(), "perturbed targets": uni.is_target.to_numpy()}
+             f"model genes ({len(hvg):,})": uni.in_model_genes.to_numpy(), "perturbed targets": uni.is_target.to_numpy()}
     cov = {k: {"n_genes": int(m.sum()), "genept": int((uni.genept_how[m] != "missing").sum()),
                "string_protein": int((uni.string_how[m] != "missing").sum()),
                "string_n2v": int(uni.string_in_graph[m].sum())} for k, m in tiers.items()}
@@ -381,6 +377,7 @@ BUILDERS = {"onehot": build_onehot, "pca_loadings": build_pca_loadings, "genept"
 
 
 def main():
+    """Build the requested embeddings."""
     ap = argparse.ArgumentParser()
     ap.add_argument("methods", nargs="*", default=METHODS)
     ap.add_argument("--config", default=None)

@@ -1,4 +1,5 @@
 # Environment and caches
+.claude/
 .venv/
 __pycache__/
 *.egg-info/
@@ -10,3 +11,6 @@ models/
 results/predictions/
 results/week2_decoder/predictions/
 embeddings/genept_all_genes.npz
+
+# Progress site and its standalone copy: kept on disk only
+site/

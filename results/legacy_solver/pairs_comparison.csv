@@ -1,0 +1,9 @@
+file,cells,different_partner_set,pct_different_partner_set,same_set_different_order,different_heaviest_partner,largest_weight_difference_where_partners_agree
+X_pca_g__train.npz,37770,52,0.138,95,104,3.838539123535156e-05
+X_pca_g__train__pooled.npz,37770,0,0.0,2,0,0.0009738430380821228
+X_pca_g__val.npz,9444,15,0.159,36,44,1.2934207916259766e-05
+X_pca_g__val__pooled.npz,9444,0,0.0,0,0,0.0003184080123901367
+X_scvi30__train.npz,37770,4,0.011,37,32,5.492568016052246e-05
+X_scvi30__train__pooled.npz,37770,0,0.0,0,0,0.0004820823669433594
+X_scvi30__val.npz,9444,11,0.116,3,12,6.580725312232971e-06
+X_scvi30__val__pooled.npz,9444,0,0.0,0,0,0.0002688169479370117

@@ -21,13 +21,15 @@ import scipy.sparse as sp
 import torch
 from torch import nn
 
-from .config import get_logger, seed_everything
+from .config import VAL_SEED_OFFSET, get_logger, seed_everything
 from .data import CONTROL, condition_genes
 
 log = get_logger("decoders")
+VAL_BATCH = 4096  # validation cells scored at a time
 
 
 def pick_device(name: str = "auto") -> torch.device:
+    """The named device, or with 'auto' the best one available: CUDA, then Apple MPS, then CPU."""
     if name != "auto":
         return torch.device(name)
     if torch.cuda.is_available():
@@ -54,6 +56,8 @@ class PertEmbedding:
 
     @classmethod
     def from_arrays(cls, name, genes, matrix, normalize="unit_mean_norm", ref_genes=None):
+        """Build the table and apply the scaling every embedding gets: with 'unit_mean_norm', one constant that makes
+        the mean row length over `ref_genes` equal to 1."""
         m = np.asarray(matrix, dtype=np.float32)
         scale = 1.0
         if normalize == "unit_mean_norm":
@@ -65,12 +69,15 @@ class PertEmbedding:
 
     @property
     def dim(self) -> int:
+        """Length of one vector."""
         return self.matrix.shape[1]
 
     def covers(self, cond: str) -> bool:
+        """True if every gene of the perturbation has a row."""
         return all(g in self.index for g in condition_genes(cond))
 
     def condition_matrix(self, conds) -> np.ndarray:
+        """One row per perturbation: the sum of its genes' vectors."""
         out = np.zeros((len(conds), self.dim), dtype=np.float32)
         for i, c in enumerate(conds):
             for g in condition_genes(c):
@@ -82,6 +89,9 @@ class PertEmbedding:
 # --------------------------------------------------------------------------- data
 @dataclass
 class SplitData:
+    """The cells of one split, ready for the model: the expression to predict, each target cell's perturbation and gem
+    group, and the states of the split's control cells."""
+
     X: torch.Tensor          # (n_targets, G) log-normalised targets (on device)
     cond: np.ndarray         # condition per target
     gem: np.ndarray          # int gem code per target
@@ -105,11 +115,14 @@ class SplitData:
 
 
 def dense(X) -> np.ndarray:
+    """A sparse or dense matrix as a float32 array."""
     return X.toarray().astype(np.float32) if sp.issparse(X) else np.asarray(X, dtype=np.float32)
 
 
 def build_split(adata: ad.AnnData, split: str, state_key: str, gem_key: str, include_control_targets: bool,
                 device, target_conds=None) -> SplitData:
+    """The SplitData of one split. `target_conds` limits the targets to those perturbations; an empty list loads the
+    controls only, which is how the test split is used."""
     obs = adata.obs
     in_split = (obs["split"] == split).to_numpy()
     cond = obs["condition"].astype(str).to_numpy()
@@ -129,6 +142,7 @@ def build_split(adata: ad.AnnData, split: str, state_key: str, gem_key: str, inc
 
 # --------------------------------------------------------------------------- model
 def mlp(sizes, dropout):
+    """Linear layers of the given sizes, with LayerNorm, ReLU and dropout between them."""
     layers = []
     for i, (a, b) in enumerate(zip(sizes[:-1], sizes[1:])):
         layers.append(nn.Linear(a, b))
@@ -138,6 +152,10 @@ def mlp(sizes, dropout):
 
 
 class LatentAdditive(nn.Module):
+    """x_hat = dec(enc(state) + W e). The control state is standardised and encoded. The embedding is mapped by a bias-
+    free linear layer, so an all-zero embedding means no perturbation and a double is the exact sum of its singles
+    in the latent. With use_state=False the control branch is dropped: the decoder-only model."""
+
     def __init__(self, n_genes, emb_dim, state_dim, latent_dim=128, hidden_dim=512, n_layers=2, dropout=0.1,
                  use_state=True, state_mean=None, state_std=None):
         super().__init__()
@@ -150,12 +168,14 @@ class LatentAdditive(nn.Module):
         self.dec = mlp([latent_dim] + [hidden_dim] * n_layers + [n_genes], dropout)
 
     def latent(self, e, s=None):
+        """The latent vector: W e, plus the encoded control state if the model uses it."""
         z = self.W(e)
         if self.use_state:
             z = z + self.enc((s - self.s_mu) / self.s_sd)
         return z
 
     def forward(self, e, s=None):
+        """Predicted expression."""
         return self.dec(self.latent(e, s))
 
 
@@ -179,7 +199,7 @@ def train_decoder(emb: PertEmbedding, train: SplitData, val: SplitData, hp: dict
 
     tr_idx, tr_c = targets(train)
     va_idx, va_c = targets(val)
-    va_ctrl = val.sample_controls(val.gem[va_idx], np.random.default_rng(10_000 + seed))  # fixed val pairs
+    va_ctrl = val.sample_controls(val.gem[va_idx], np.random.default_rng(VAL_SEED_OFFSET + seed))  # fixed val pairs
 
     model = LatentAdditive(train.X.shape[1], emb.dim, train.ctrl_state.shape[1], hp["latent_dim"], hp["hidden_dim"],
                            hp["n_layers"], hp["dropout"], use_state, *state_stats).to(device)
@@ -190,10 +210,10 @@ def train_decoder(emb: PertEmbedding, train: SplitData, val: SplitData, hp: dict
         model.eval()
         tot = 0.0
         with torch.no_grad():
-            for i in range(0, len(va_idx), 4096):
-                j = va_idx[i:i + 4096]
+            for i in range(0, len(va_idx), VAL_BATCH):
+                j = va_idx[i:i + VAL_BATCH]
                 e = C[torch.as_tensor(va_c[j], device=device)]
-                s = val.ctrl_state[torch.as_tensor(va_ctrl[i:i + 4096], device=device)]
+                s = val.ctrl_state[torch.as_tensor(va_ctrl[i:i + VAL_BATCH], device=device)]
                 tot += nn.functional.mse_loss(model(e, s), val.X[torch.as_tensor(j, device=device)],
                                               reduction="sum").item()
         return tot / (len(va_idx) * val.X.shape[1])

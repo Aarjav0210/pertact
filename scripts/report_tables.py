@@ -15,11 +15,13 @@ DEC = {"latent_additive": "latent additive", "decoder_only": "decoder only"}
 
 
 def summary(df):
+    """Mean, standard deviation and count over seeds."""
     g = df.groupby(["method", "decoder", "split", "metric"])["value"]
     return pd.DataFrame({"mean": g.mean(), "std": g.std(ddof=1), "n": g.size()}).reset_index()
 
 
 def cell(s, method, decoder, split, metric):
+    """One formatted table cell: the mean, or mean ± sd when there are several seeds."""
     r = s[(s.method == method) & (s.decoder == decoder) & (s.split == split) & (s.metric == metric)]
     if r.empty or pd.isna(r["mean"].iloc[0]):
         return "n/a"
@@ -32,6 +34,7 @@ NEW_METRICS = ["pearson_int_all", "pearson_int_top20", "pearson_delta_de20_nt", 
 
 
 def table(s, split, baselines, covered_label, metrics=None):
+    """One Markdown table for a split: the baselines first, then every embedding with both decoders."""
     metrics = metrics or METRICS
     names = {"mse_all": "MSE all", "mse_de20": "MSE top-20 DE", "pearson_delta_all": "Pearson Δ all",
              "pearson_delta_de20": "Pearson Δ top-20 DE", "pearson_int_all": "Interaction r, all genes",
@@ -51,6 +54,7 @@ def table(s, split, baselines, covered_label, metrics=None):
 
 
 def main():
+    """Print the report's tables."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", default="results/week1.csv")
     ap.add_argument("--compare", default=None)

@@ -10,7 +10,6 @@ Two stages, with the split built in between so that every gene-level choice
 from __future__ import annotations
 
 import argparse
-from collections import Counter
 
 import anndata as ad
 import numpy as np
@@ -46,11 +45,19 @@ def parse_guide_id(guide_id: str, control_prefix: str) -> tuple[tuple[str, ...] 
 
 
 def condition_name(genes: tuple[str, ...]) -> str:
+    """Label of a perturbation: 'control' for no genes, else its genes in alphabetical order joined by '+'."""
     return CONTROL if len(genes) == 0 else "+".join(sorted(genes))
 
 
 def condition_genes(cond: str) -> list[str]:
+    """The genes of a perturbation label; an empty list for control."""
     return [] if cond == CONTROL else cond.split("+")
+
+
+def cell_labels(obs: pd.DataFrame, batch_key: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Each cell's perturbation, gem group and split (train / val / test / unused), as plain string arrays."""
+    return (obs["condition"].astype(str).to_numpy(), obs[batch_key].astype(str).to_numpy(),
+            obs["split"].astype(str).to_numpy())
 
 
 # --------------------------------------------------------------------------- gene symbols
@@ -144,6 +151,9 @@ def cross_check_labels(obs: pd.DataFrame, ann: pd.DataFrame) -> dict:
 
 
 def build_qc(cfg: dict) -> None:
+    """Stage 1. Read the raw file, work out each cell's perturbation, apply the guide filter, the cell quality filters
+    and the minimum-cells rule, and write the QC'd file with all genes and raw counts. No gene is chosen here, so
+    this stage runs before the split exists."""
     d = cfg["data"]
     stats: dict = {"source": str(path(cfg, "raw_h5ad"))}
     log.info("reading %s", path(cfg, "raw_h5ad"))
@@ -220,6 +230,7 @@ def build_qc(cfg: dict) -> None:
 
 
 def summarise_conditions(obs: pd.DataFrame) -> dict:
+    """Counts for the statistics file: control, single and double cells, and the smallest, median and largest group."""
     vc = obs["condition"].value_counts()
     nt = obs.drop_duplicates("condition").set_index("condition")["n_targets"]
     singles, doubles = vc[nt.reindex(vc.index) == 1], vc[nt.reindex(vc.index) == 2]
@@ -236,6 +247,8 @@ def summarise_conditions(obs: pd.DataFrame) -> dict:
 
 # --------------------------------------------------------------------------- stage 2
 def build_processed(cfg: dict) -> None:
+    """Stage 2. Label each cell with its split, choose the genes from training cells only (detected genes, then highly
+    variable genes, plus every perturbed gene), normalise each cell, and write the model matrix."""
     d = cfg["data"]
     splits = read_json(path(cfg, "splits"))
     log.info("reading %s", path(cfg, "qc_h5ad"))
@@ -295,11 +308,8 @@ def build_processed(cfg: dict) -> None:
     out.write_h5ad(p, compression="gzip")
 
 
-def load_processed(cfg: dict) -> ad.AnnData:
-    return ad.read_h5ad(path(cfg, "processed_h5ad"))
-
-
 def main():
+    """Run one stage."""
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["qc", "hvg"])
     ap.add_argument("--config", default=None)

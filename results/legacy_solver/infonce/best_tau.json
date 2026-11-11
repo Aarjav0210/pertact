@@ -1,0 +1,7 @@
+{
+ "selected_by": "max validation instance-retrieval MRR, seed 0",
+ "tau": {
+  "X_pca_g": 0.03,
+  "X_scvi30": 0.1
+ }
+}

@@ -34,8 +34,11 @@ import numpy as np
 import pandas as pd
 import torch
 
-from .config import get_logger, load_config, path, read_json, seed_everything, write_json
+from .actions import length_ratio, save_actions
+from .config import VAL_SEED_OFFSET, get_logger, load_config, path, read_json, seed_everything, write_json
+from .encoders import load_all, scale_D0
 from .ot import load_pairs
+from .retrieval import instance_retrieval
 
 log = get_logger("infonce")
 
@@ -53,6 +56,8 @@ class PairData:
         self.by_pert = [np.flatnonzero(self.a == i) for i in range(len(genes))]
 
     def batch(self, rng, P, K):
+        """One batch: P perturbations with K pairs each. For every perturbed cell, one of its partner controls is drawn
+        with probability equal to its OT weight. Returns control states, perturbed-cell states and gene indices."""
         perts = rng.choice([i for i, ix in enumerate(self.by_pert) if len(ix)], size=P, replace=False)
         rows = np.concatenate([rng.choice(self.by_pert[p], size=K, replace=len(self.by_pert[p]) < K) for p in perts])
         u = rng.random(len(rows))[:, None]
@@ -63,6 +68,8 @@ class PairData:
 
 
 def infonce_loss(F, s_ctrl, s_pert, a, tau, D0, rho=0.0):
+    """The loss of one batch: each query (control state + action vector) against every perturbed cell of the batch,
+    scored by negative squared distance, symmetric over rows and columns. rho > 0 adds the length anchor."""
     q = s_ctrl + F[a]
     d2 = (q * q).sum(1, keepdim=True) + (s_pert * s_pert).sum(1)[None, :] - 2 * q @ s_pert.T
     L = -d2 / (tau * D0)
@@ -73,13 +80,10 @@ def infonce_loss(F, s_ctrl, s_pert, a, tau, D0, rho=0.0):
     return loss
 
 
-def scale_D0(S_train, seed=0, n=20000):
-    rng = np.random.default_rng(seed)
-    i, j = rng.integers(0, len(S_train), n), rng.integers(0, len(S_train), n)
-    return float(((S_train[i] - S_train[j]) ** 2).sum(1).mean())
-
-
 def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0):
+    """Learn one action vector per gene in one state space. The vectors start at zero and are the only thing trained.
+    Training stops when the loss on fixed validation batches has not improved for `patience` checks; the best
+    vectors are returned with their genes, the loss history and a summary."""
     c = cfg["infonce"]
     seed_everything(seed)
     rng = np.random.default_rng(seed)
@@ -88,7 +92,7 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0):
     tr = PairData(cfg, S, space, "train", genes)
     va = PairData(cfg, S, space, "val", genes)
     D0 = scale_D0(S[(adata.obs["split"] == "train").to_numpy()], seed)
-    vrng = np.random.default_rng(10_000 + seed)
+    vrng = np.random.default_rng(VAL_SEED_OFFSET + seed)
     val_batches = [va.batch(vrng, c["P"], c["K"]) for _ in range(c["n_val_batches"])]
     F = torch.zeros(len(genes), S.shape[1], requires_grad=True)
     opt = torch.optim.Adam([F], lr=c["lr"])
@@ -110,6 +114,8 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0):
                 bad += 1
             if bad >= c["patience"]:
                 break
+    if best_F is None:
+        raise RuntimeError(f"no validation check ran in {step} steps: max_steps must be at least eval_every ({c['eval_every']})")
     if verbose:
         log.info("%s seed %d tau %.3g rho %.3g: %d steps, best val loss %.4f (chance %.4f), %.0fs", space, seed, tau,
                  rho, step, best, np.log(c["P"] * c["K"]), time.time() - t0)
@@ -122,30 +128,9 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0):
                                                        "val_anchor_share": float((tot - nce) / tot)}
 
 
-def save_actions(cfg, space, seed, F, genes, info, hist, tau, name="infonce"):
-    p = path(cfg, "embeddings_dir") / f"{name}__{space}__s{seed}.npz"
-    np.savez(p, emb=F.astype(np.float32), genes=np.array(genes, dtype=str), missing=np.array([], dtype=str))
-    d = path(cfg, "results_dir") / "infonce"
-    d.mkdir(parents=True, exist_ok=True)
-    tag = "" if name == "infonce" else f"{name}__"
-    hist.to_csv(d / f"history__{tag}{space}__s{seed}.csv", index=False)
-    write_json(info | {"tau": tau, "space": space, "seed": seed}, d / f"info__{tag}{space}__s{seed}.json")
-
-
-def length_ratio(cfg, adata, space, F, genes) -> np.ndarray:
-    """||f(a)|| / ||mean OT shift on training pairs||, one value per gene."""
-    from .retrieval import mean_shift_actions
-
-    ms = mean_shift_actions(cfg, adata, space)
-    return np.array([np.linalg.norm(f) / np.linalg.norm(ms[g]) for g, f in zip(genes, F)])
-
-
 def anchor(cfg):
     """Pick rho per space on seed 0 by the training-pair length ratio (no validation or test signal), then train
     every seed. Validation retrieval for every grid value is logged for the record, not used to choose."""
-    from .evaluate import load_all
-    from .retrieval import instance_retrieval
-
     adata, splits = load_all(cfg)
     c = cfg["infonce"]
     taus = read_json(path(cfg, "results_dir") / "infonce" / "best_tau.json")["tau"]
@@ -177,9 +162,8 @@ def anchor(cfg):
 
 
 def tune(cfg):
-    from .evaluate import load_all
-    from .retrieval import instance_retrieval
-
+    """Train once per temperature and state space on seed 0, and keep the temperature with the best forward-test
+    score (MRR) on validation cells."""
     adata, splits = load_all(cfg)
     rows = []
     for space, tau in itertools.product(cfg["ot"]["spaces"], cfg["infonce"]["tau_grid"]):
@@ -202,8 +186,7 @@ def tune(cfg):
 
 
 def train_all(cfg):
-    from .evaluate import load_all
-
+    """Train the final action vectors: every state space and seed, with the chosen temperature."""
     adata, splits = load_all(cfg)
     best = read_json(path(cfg, "results_dir") / "infonce" / "best_tau.json")["tau"]
     for space in cfg["ot"]["spaces"]:
@@ -213,6 +196,7 @@ def train_all(cfg):
 
 
 def main():
+    """Dispatch tune, train and anchor."""
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["tune", "train", "anchor"])
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")

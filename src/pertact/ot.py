@@ -1,4 +1,4 @@
-"""Entropic optimal-transport pairing of control and perturbed cells in a frozen state space (Sinkhorn-Knopp).
+"""Entropic optimal-transport pairing of control and perturbed cells in a frozen state space (Sinkhorn-Knopp, via POT).
 
 No perturbed cell has a measured "before" state, so each perturbed cell is paired with the control cells it most
 plausibly came from: the coupling that moves the control cloud onto the perturbed cloud at least total squared
@@ -7,7 +7,7 @@ so the blur does not depend on how far a perturbation moves cells). Problems are
 pairs never cross batches.
 
     python -I -m pertact.ot              # every space in config ot.spaces, train and val splits
-    python -I -m pertact.ot --check      # compare with POT and recover a known synthetic shift
+    python -I -m pertact.ot --check      # recover a known shift on synthetic clouds
 
 Writes results/ot/<space>__<split>.npz with, for every perturbed cell of that split (single perturbations only):
     cell (row in processed h5ad), cond, partners (k control rows), weights (k, sum to 1)
@@ -20,55 +20,37 @@ import argparse
 import time
 
 import numpy as np
+import ot as pot  # the POT library; this module is pertact.ot
 import pandas as pd
-from scipy.special import logsumexp
 
-from .config import get_logger, load_config, path, read_json, seed_everything, write_json
-from .data import CONTROL
+from .config import get_logger, load_config, path, seed_everything, write_json
+from .data import CONTROL, cell_labels
+from .encoders import load_all
 
 log = get_logger("ot")
+EPS_SUBSAMPLE = 500  # controls sampled to estimate the median squared distance that sets epsilon
 
 
-# --------------------------------------------------------------------------- Sinkhorn-Knopp (log domain)
-def sq_dists(X, Y):
-    """Pairwise squared Euclidean distances, (n, m)."""
-    d = (X * X).sum(1)[:, None] + (Y * Y).sum(1)[None, :] - 2.0 * X @ Y.T
-    return np.maximum(d, 0.0)
+# --------------------------------------------------------------------------- entropic OT, solved by POT
+def sinkhorn(C, eps, max_iter=10000, tol=1e-9):
+    """Entropic OT between two uniform clouds:  min_P <P, C> - eps H(P)  s.t.  P 1 = 1/n,  P^T 1 = 1/m.
 
-
-def sinkhorn(C, eps, a=None, b=None, max_iter=5000, tol=1e-6):
-    """Entropic OT  min_P <P, C> - eps H(P)  s.t.  P 1 = a, P^T 1 = b,  by Sinkhorn-Knopp scaling in the log domain.
-
-    Alternately rescales rows and columns of the Gibbs kernel K = exp(-C / eps) until both marginals match. Working
-    with the dual potentials (f, g) instead of the scalings u = exp(f / eps), v = exp(g / eps) avoids under/overflow
-    for small eps. Returns the coupling P and a dict with iterations, final marginal error and transport cost.
-    """
+    Solved by POT's log-domain Sinkhorn-Knopp, which stays stable for small eps. Returns the coupling P and a dict
+    with the iterations used, the remaining row-sum error and the transport cost."""
     n, m = C.shape
-    a = np.full(n, 1.0 / n) if a is None else a
-    b = np.full(m, 1.0 / m) if b is None else b
-    la, lb = np.log(a), np.log(b)
-    f, g = np.zeros(n), np.zeros(m)
-    err, it = np.inf, 0
-    for it in range(1, max_iter + 1):
-        f = eps * (la - logsumexp((g[None, :] - C) / eps, axis=1))  # row scaling: make P 1 = a
-        g = eps * (lb - logsumexp((f[:, None] - C) / eps, axis=0))  # column scaling: make P^T 1 = b
-        if it % 10 == 0 or it == max_iter:
-            logP = (f[:, None] + g[None, :] - C) / eps
-            err = np.abs(np.exp(logsumexp(logP, axis=1)) - a).sum()  # columns are exact after the g update
-            if err < tol:
-                break
-    P = np.exp((f[:, None] + g[None, :] - C) / eps)
-    return P, {"iters": it, "marginal_err": float(err), "cost": float((P * C).sum())}
+    a, b = np.full(n, 1.0 / n), np.full(m, 1.0 / m)
+    P, log_ = pot.sinkhorn(a, b, C, eps, method="sinkhorn_log", numItermax=max_iter, stopThr=tol, log=True)
+    return P, {"iters": int(log_["niter"]), "marginal_err": float(np.abs(P.sum(1) - a).sum()), "cost": float((P * C).sum())}
 
 
 def pair(Xc, Xp, eps_scale, k, rng=None):
     """Couple controls Xc (n, d) to perturbed cells Xp (m, d). For each perturbed cell return its k most-coupled
     controls and their renormalised weights, plus diagnostics."""
-    C = sq_dists(Xc, Xp)
+    C = pot.dist(Xc, Xp)  # squared Euclidean distance, every control against every perturbed cell
     rng = rng or np.random.default_rng(0)
     # epsilon from the spread of the control cloud only: a perturbation's shift must not change the blur
-    sub = Xc[rng.choice(len(Xc), min(len(Xc), 500), replace=False)]
-    med = float(np.median(sq_dists(sub, sub)[np.triu_indices(len(sub), 1)]))
+    sub = Xc[rng.choice(len(Xc), min(len(Xc), EPS_SUBSAMPLE), replace=False)]
+    med = float(np.median(pot.dist(sub, sub)[np.triu_indices(len(sub), 1)]))
     eps = eps_scale * med
     P, info = sinkhorn(C, eps)
     col = P / P.sum(0, keepdims=True)  # p(control | perturbed cell)
@@ -86,12 +68,11 @@ def pair(Xc, Xp, eps_scale, k, rng=None):
 
 # --------------------------------------------------------------------------- pairing for the dataset
 def run_space(cfg, adata, splits, space):
+    """Solve and save every pairing problem of one state space, for training cells and for validation cells: first
+    per perturbation and gem group, then pooled (all single-perturbed cells of a gem group at once, labels unused)."""
     o = cfg["ot"]
     X = np.asarray(adata.obsm[space], dtype=np.float64)
-    obs = adata.obs
-    cond = obs["condition"].astype(str).to_numpy()
-    split = obs["split"].astype(str).to_numpy()
-    gem = obs[cfg["data"]["batch_key"]].astype(str).to_numpy()
+    cond, gem, split = cell_labels(adata.obs, cfg["data"]["batch_key"])
     rng = np.random.default_rng(cfg["seed"])
     out_dir = path(cfg, "results_dir") / "ot"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -131,36 +112,30 @@ def run_space(cfg, adata, splits, space):
 
 
 def load_pairs(cfg, space, split, pooled=False):
+    """One saved set of pairs: cell, cond, partners (k controls per cell) and weights."""
     z = np.load(path(cfg, "results_dir") / "ot" / f"{space}__{split}{'__pooled' if pooled else ''}.npz")
     return {k: z[k] for k in z.files}
 
 
+def start_states(S, pairs) -> np.ndarray:
+    """The start state of every paired cell: the weighted average of its partner controls' states."""
+    return (S[pairs["partners"]] * pairs["weights"][..., None]).sum(1)
+
+
 # --------------------------------------------------------------------------- checks
 def check(cfg):
-    """1) agree with POT's Sinkhorn on random problems; 2) recover a known translation on synthetic clouds."""
-    import ot as pot
-
+    """Two checks of the pairing on synthetic clouds: a known shift is recovered, and moving the controls does not
+    change the plan."""
     rng = np.random.default_rng(0)
-    res = {}
-    diffs = []
-    for _ in range(5):
-        Xc, Xp = rng.normal(size=(300, 20)), rng.normal(size=(120, 20)) + 0.5
-        C = sq_dists(Xc, Xp)
-        eps = cfg["ot"]["eps_scale"] * np.median(C)
-        P, _ = sinkhorn(C, eps, tol=1e-9)
-        Q = pot.sinkhorn(np.full(300, 1 / 300), np.full(120, 1 / 120), C, eps, method="sinkhorn_log",
-                         numItermax=20000, stopThr=1e-12)
-        diffs.append(float(np.abs(P - Q).max() / Q.max()))
-    res["max_relative_diff_vs_POT"] = max(diffs)
-    # synthetic: perturbed = a random subset of controls shifted by a known vector, plus small noise
+    # perturbed = a random subset of controls shifted by a known vector, plus small noise
     n, m, d = 800, 200, 30
     Xc = rng.normal(size=(n, d)) * np.linspace(3, 0.3, d)
     src = rng.choice(n, m, replace=False)
     shift = rng.normal(size=d) * 2
     Xp = Xc[src] + shift + rng.normal(scale=0.05, size=(m, d))
     top, w, info = pair(Xc, Xp, cfg["ot"]["eps_scale"], 5)
-    res["synthetic_true_source_is_top1"] = float((top[:, 0] == src).mean())
-    res["synthetic_true_source_in_top5"] = float((top == src[:, None]).any(1).mean())
+    res = {"synthetic_true_source_is_top1": float((top[:, 0] == src).mean()),
+           "synthetic_true_source_in_top5": float((top == src[:, None]).any(1).mean())}
     # a translation adds only row/column constants to the quadratic cost, so the plan must not change
     top_s, _, _ = pair(Xc + shift, Xp, cfg["ot"]["eps_scale"], 5)  # same controls, so same epsilon
     res["plan_unchanged_by_translation"] = bool((top_s == top).all())
@@ -172,6 +147,7 @@ def check(cfg):
 
 
 def main():
+    """Run the checks, or pair every configured state space."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--config", default=None)
@@ -182,8 +158,6 @@ def main():
     if a.check:
         check(cfg)
         return
-    from .evaluate import load_all
-
     adata, splits = load_all(cfg)
     diag = []
     for space in cfg["ot"]["spaces"]:

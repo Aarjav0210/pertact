@@ -25,68 +25,18 @@ import argparse
 import numpy as np
 import pandas as pd
 
+from .actions import (actions_path, calibrate_scale, length_table, load_actions, mean_shift_actions,
+                      per_action_scale)
 from .config import get_logger, load_config, path
-from .data import CONTROL
-from .ot import load_pairs
+from .data import CONTROL, cell_labels
+from .encoders import load_all, scale_D0, states
+from .ot import load_pairs, start_states
 
 log = get_logger("retrieval")
+TRAIN_QUERY_CAP = 5000  # the forward test on training cells uses this many random queries; validation uses them all
 
 
-def _states(adata, space):
-    return np.asarray(adata.obsm[space], dtype=np.float32)
-
-
-def mean_shift_actions(cfg, adata, space) -> dict[str, np.ndarray]:
-    """f(a) = mean over training OT pairs of s(x_pert) - Σ_k w_k s(x_ctrl_k)."""
-    S = _states(adata, space)
-    z = load_pairs(cfg, space, "train")
-    start = (S[z["partners"]] * z["weights"][..., None]).sum(1)
-    disp = S[z["cell"]] - start
-    df = pd.DataFrame(disp)
-    df["cond"] = z["cond"]
-    m = df.groupby("cond").mean()
-    return {g: m.loc[g].to_numpy(dtype=np.float32) for g in m.index}
-
-
-def calibrate_scale(cfg, adata, space, actions) -> float:
-    """One scalar alpha for a whole action set, by least squares on training OT pairs:
-    min_alpha sum_j || start_j + alpha f(a_j) - s(x_j) ||².  InfoNCE only constrains relative distances, so its
-    actions can be right in direction but wrong in length; this fixes the length without touching directions."""
-    S = _states(adata, space)
-    z = load_pairs(cfg, space, "train")
-    start = (S[z["partners"]] * z["weights"][..., None]).sum(1)
-    F = np.stack([actions[c] for c in z["cond"]])
-    return float((F * (S[z["cell"]] - start)).sum() / (F * F).sum())
-
-
-def per_action_scale(cfg, adata, space, actions) -> dict[str, float]:
-    """One scalar c_a per action, by least squares on that perturbation's training OT pairs:
-    min_c sum_{j in a} || start_j + c f(a) - s(x_j) ||²  =>  c_a = f(a)·mean_j(s(x_j) - start_j) / ||f(a)||².
-    The solution is the projection of the mean OT shift onto f(a): direction kept, length = ||mean shift|| * cos."""
-    S = _states(adata, space)
-    z = load_pairs(cfg, space, "train")
-    start = (S[z["partners"]] * z["weights"][..., None]).sum(1)
-    disp = pd.DataFrame(S[z["cell"]] - start)
-    disp["cond"] = z["cond"]
-    tot = disp.groupby("cond").sum()
-    n = disp.groupby("cond").size()
-    return {g: float(actions[g] @ tot.loc[g].to_numpy() / (n[g] * actions[g] @ actions[g])) for g in tot.index if g in actions}
-
-
-def length_table(sets, ms, tier, space) -> pd.DataFrame:
-    """Per perturbation: ||f(a)|| / ||mean OT shift|| and cos(f(a), mean shift) for every action set."""
-    rows = []
-    for (name, seed), acts in sets.items():
-        for g, m in ms.items():
-            if g not in acts:
-                continue
-            f = acts[g]
-            nf, nm = float(np.linalg.norm(f)), float(np.linalg.norm(m))
-            rows.append({"space": space, "actions": name, "seed": seed, "gene": g, "tier": tier[g],
-                         "len_ratio": nf / nm, "cos_mean_shift": float(f @ m / (nf * nm)) if nf > 0 else np.nan})
-    return pd.DataFrame(rows)
-
-
+# --------------------------------------------------------------------------- the two tests
 def _avg_rank(d_true, d_all):
     """Rank of the true item (1 = best) with ties averaged, row by row."""
     less = (d_all < d_true[:, None]).sum(1)
@@ -95,7 +45,9 @@ def _avg_rank(d_true, d_all):
 
 
 def instance_retrieval(cfg, adata, space, split, actions, max_queries=None, seed=0, chunk=1024) -> dict:
-    S = _states(adata, space)
+    """The forward test. For each paired cell the query is its heaviest partner control plus the action vector, and
+    every cell of the split is ranked by distance to it. Returns the rank statistics of the right cell."""
+    S = states(adata, space)
     z = load_pairs(cfg, space, split)
     keys = S[z["cell"]]
     conds = z["cond"]
@@ -122,15 +74,17 @@ def instance_retrieval(cfg, adata, space, split, actions, max_queries=None, seed
 
 
 def identification(cfg, adata, space, split, actions, genes, start="pooled_ot"):
-    S = _states(adata, space)
+    """The reverse test. From a start state chosen without the cell's label (its pooled OT partners, or the mean
+    control of its gem group), every action vector and "no perturbation" is tried, and the true perturbation is
+    ranked by how close each lands to the cell. Returns the summary and the rank of every cell."""
+    S = states(adata, space)
     z = load_pairs(cfg, space, split, pooled=True)
     x = S[z["cell"]]
     if start == "pooled_ot":
-        s0 = (S[z["partners"]] * z["weights"][..., None]).sum(1)
+        s0 = start_states(S, z)
     else:  # mean of the split's controls in the same gem group
-        obs = adata.obs
-        gem = obs[cfg["data"]["batch_key"]].astype(str).to_numpy()
-        ctrl = (obs["split"].astype(str).to_numpy() == split) & (obs["condition"].astype(str).to_numpy() == CONTROL)
+        cond, gem, cell_split = cell_labels(adata.obs, cfg["data"]["batch_key"])
+        ctrl = (cell_split == split) & (cond == CONTROL)
         mu = {g: S[ctrl & (gem == g)].mean(0) for g in np.unique(gem)}
         s0 = np.stack([mu[g] for g in gem[z["cell"]]])
     cand = genes + [CONTROL]
@@ -145,48 +99,57 @@ def identification(cfg, adata, space, split, actions, genes, start="pooled_ot"):
             "top5": float((r <= 5).mean()), "mrr": float((1 / r).mean())}, per
 
 
-def evaluate(cfg):
-    from .evaluate import load_all
-    from .infonce import scale_D0
+# --------------------------------------------------------------------------- every set of vectors, both tests
+def build_action_sets(cfg, adata, space, genes, ms):
+    """Every set of action vectors that is tested in one state space, keyed by (name, seed), plus the rescaling
+    numbers fitted on training pairs. The references (mean shift, no action, shuffled) come first, then, for each
+    seed with saved InfoNCE vectors: as trained, rescaled globally and per gene, the two length swaps, and anchored."""
+    scale_rows = []
+    rng = np.random.default_rng(cfg["seed"])
+    perm = rng.permutation(len(genes))
+    sets = {("mean_shift", 0): ms, ("zero", 0): {},
+            ("shuffled_mean_shift", 0): {g: ms[genes[perm[i]]] for i, g in enumerate(genes)}}
+    for seed in cfg["eval"]["seeds"]:
+        if actions_path(cfg, space, seed).exists():
+            acts = load_actions(cfg, space, seed)
+            sets[("infonce", seed)] = acts
+            alpha = calibrate_scale(cfg, adata, space, acts)
+            sets[("infonce_calibrated", seed)] = {g: alpha * v for g, v in acts.items()}
+            c = per_action_scale(cfg, adata, space, acts)
+            sets[("infonce_scaled_per_action", seed)] = {g: c[g] * v for g, v in acts.items()}
+            scale_rows += [{"space": space, "actions": "infonce", "seed": seed, "gene": g, "c": v, "alpha": alpha}
+                           for g, v in c.items()]
+            log.info("%s seed %d: per-action scales c_a median %.3f (range %.3f to %.3f)", space, seed,
+                     np.median(list(c.values())), min(c.values()), max(c.values()))
+            # length vs direction controls: swap the lengths of the two action sets gene by gene
+            nrm = lambda v: v / np.linalg.norm(v)
+            sets[("infonce_dir_meanshift_len", seed)] = {g: nrm(acts[g]) * np.linalg.norm(ms[g]) for g in genes}
+            sets[("meanshift_dir_infonce_len", seed)] = {g: nrm(ms[g]) * np.linalg.norm(acts[g]) for g in genes}
+            log.info("%s seed %d: InfoNCE length calibration alpha = %.3f (fitted on training pairs)", space, seed, alpha)
+        else:
+            log.warning("%s seed %d: no saved InfoNCE vectors (%s); this seed is left out", space, seed,
+                        actions_path(cfg, space, seed).name)
+        if actions_path(cfg, space, seed, "infonce_anchor").exists():  # trained with the length anchor; scales logged, not applied
+            acts = load_actions(cfg, space, seed, "infonce_anchor")
+            sets[("infonce_anchor", seed)] = acts
+            alpha, c = calibrate_scale(cfg, adata, space, acts), per_action_scale(cfg, adata, space, acts)
+            scale_rows += [{"space": space, "actions": "infonce_anchor", "seed": seed, "gene": g, "c": v,
+                            "alpha": alpha} for g, v in c.items()]
+            log.info("%s seed %d: anchored InfoNCE, least-squares alpha would be %.3f", space, seed, alpha)
+    return sets, scale_rows
 
+
+def run_tests(cfg):
+    """Run both tests on every set of action vectors, in every state space, on validation cells and on training
+    cells, and write the five Week 2 result tables."""
     adata, splits = load_all(cfg)
     genes = sorted(splits["train_singles"])
     rows, per_rows, strength_rows, scale_rows, len_rows = [], [], [], [], []
     for space in cfg["ot"]["spaces"]:
         ms = mean_shift_actions(cfg, adata, space)
-        rng = np.random.default_rng(cfg["seed"])
-        perm = rng.permutation(len(genes))
-        sets = {("mean_shift", 0): ms, ("zero", 0): {},
-                ("shuffled_mean_shift", 0): {g: ms[genes[perm[i]]] for i, g in enumerate(genes)}}
-        for seed in cfg["eval"]["seeds"]:
-            p = path(cfg, "embeddings_dir") / f"infonce__{space}__s{seed}.npz"
-            if p.exists():
-                zz = np.load(p)
-                acts = dict(zip(zz["genes"].tolist(), zz["emb"]))
-                sets[("infonce", seed)] = acts
-                alpha = calibrate_scale(cfg, adata, space, acts)
-                sets[("infonce_calibrated", seed)] = {g: alpha * v for g, v in acts.items()}
-                c = per_action_scale(cfg, adata, space, acts)
-                sets[("infonce_scaled_per_action", seed)] = {g: c[g] * v for g, v in acts.items()}
-                scale_rows += [{"space": space, "actions": "infonce", "seed": seed, "gene": g, "c": v, "alpha": alpha}
-                               for g, v in c.items()]
-                log.info("%s seed %d: per-action scales c_a median %.3f (range %.3f to %.3f)", space, seed,
-                         np.median(list(c.values())), min(c.values()), max(c.values()))
-                # length vs direction controls: swap the lengths of the two action sets gene by gene
-                nrm = lambda v: v / np.linalg.norm(v)
-                sets[("infonce_dir_meanshift_len", seed)] = {g: nrm(acts[g]) * np.linalg.norm(ms[g]) for g in genes}
-                sets[("meanshift_dir_infonce_len", seed)] = {g: nrm(ms[g]) * np.linalg.norm(acts[g]) for g in genes}
-                log.info("%s seed %d: InfoNCE length calibration alpha = %.3f (fitted on training pairs)", space, seed, alpha)
-            pa = path(cfg, "embeddings_dir") / f"infonce_anchor__{space}__s{seed}.npz"
-            if pa.exists():  # InfoNCE trained with the weak length anchor (addendum); scales logged, not applied
-                za = np.load(pa)
-                acts = dict(zip(za["genes"].tolist(), za["emb"]))
-                sets[("infonce_anchor", seed)] = acts
-                alpha, c = calibrate_scale(cfg, adata, space, acts), per_action_scale(cfg, adata, space, acts)
-                scale_rows += [{"space": space, "actions": "infonce_anchor", "seed": seed, "gene": g, "c": v,
-                                "alpha": alpha} for g, v in c.items()]
-                log.info("%s seed %d: anchored InfoNCE, least-squares alpha would be %.3f", space, seed, alpha)
-        D0 = scale_D0(_states(adata, space)[(adata.obs["split"] == "train").to_numpy()])
+        sets, scales = build_action_sets(cfg, adata, space, genes, ms)
+        scale_rows += scales
+        D0 = scale_D0(states(adata, space)[(adata.obs["split"] == "train").to_numpy()])
         strength = {g: float(np.linalg.norm(v) / np.sqrt(D0)) for g, v in ms.items()}
         cuts = np.quantile(list(strength.values()), [1 / 3, 2 / 3])
         tier = {g: ("weak" if s <= cuts[0] else "medium" if s <= cuts[1] else "strong") for g, s in strength.items()}
@@ -196,7 +159,7 @@ def evaluate(cfg):
         for (name, seed), acts in sets.items():
             for split in ("val", "train"):
                 base = {"space": space, "actions": name, "seed": seed, "split": split}
-                r = instance_retrieval(cfg, adata, space, split, acts, max_queries=5000 if split == "train" else None)
+                r = instance_retrieval(cfg, adata, space, split, acts, max_queries=TRAIN_QUERY_CAP if split == "train" else None)
                 rows += [base | {"task": "instance", "metric": k, "value": v} for k, v in r.items()]
                 for start in ("pooled_ot", "ctrl_mean"):
                     m, per = identification(cfg, adata, space, split, acts, genes, start)
@@ -223,6 +186,7 @@ def evaluate(cfg):
 
 
 def main():
+    """Run both tests on every saved set of action vectors."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
     ap.add_argument("--config", default=None)
@@ -230,7 +194,7 @@ def main():
     cfg = load_config(a.config)
     if a.spaces:
         cfg["ot"]["spaces"] = a.spaces
-    evaluate(cfg)
+    run_tests(cfg)
 
 
 if __name__ == "__main__":

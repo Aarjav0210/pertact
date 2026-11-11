@@ -1,4 +1,4 @@
-# Week 1 config: Norman 2019 data, splits, frozen encoders, perturbation embeddings, decoders.
+# Every setting of the pipeline: data and splits, frozen encoders, Week 1 embeddings and decoders, Week 2 OT pairing and InfoNCE.
 seed: 0
 
 paths:

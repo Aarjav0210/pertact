@@ -1,11 +1,10 @@
 {
- "max_relative_diff_vs_POT": 9.783953777553468e-09,
  "synthetic_true_source_is_top1": 1.0,
  "synthetic_true_source_in_top5": 1.0,
  "plan_unchanged_by_translation": true,
  "synthetic_info": {
-  "iters": 50,
-  "marginal_err": 3.6059257331249803e-07,
-  "perplexity": 20.071777187843974
+  "iters": 70,
+  "marginal_err": 8.91864707086576e-16,
+  "perplexity": 20.655095769516556
  }
 }

@@ -6,14 +6,14 @@ single perturbations, predict the double a+b? The data is Norman et al. 2019 (K5
 
 * **Week 1** (`REPORT.md`): data, splits, frozen state encoders, perturbation embeddings, and the latent additive and decoder-only models.
 * **Week 2** (`REPORT_week2.md`): entropic OT pairing, InfoNCE actions, retrieval of held-out cells, and the action-length addendum.
-* **Progress site:** `site/index.html`. `scripts/build_site.py` refreshes only the Week 1 results; the Week 2 content is static HTML.
+* **Progress site:** `site/index.html` (kept on disk only, not in the repository). Start with its Walkthrough tab. `scripts/build_site.py` refreshes the Week 1 results, `scripts/build_walkthrough.py` rebuilds the Walkthrough tab, and `scripts/build_code_tour.py` rebuilds the Code tab, which shows every source file in full with a note per function and a list of review points; the Week 2 tabs are static HTML.
 
 ## Setup
 
 Needs Python 3.11 and [uv](https://docs.astral.sh/uv/). The runs used an Apple M1 Pro with PyTorch on MPS.
 
-`pyproject.toml` lists no dependencies, so the exact package versions come from `env.txt`. Its `-e` line points at an
-old folder, so install only the pinned lines:
+`pyproject.toml` lists the packages the code imports. `env.txt` is the full environment the results were produced
+with, so install from it. Its `-e` line points at an old folder, so install only the pinned lines:
 
 ```bash
 uv venv .venv --python 3.11
@@ -78,7 +78,8 @@ python -I -m pertact.evaluate run           # 4 embeddings x 2 decoders x 3 seed
 python -I -m pertact.evaluate compose       # additive vs sequential doubles
 python -I -m pertact.evaluate rescore       # recompute metrics from saved predictions
 python -I -m pertact.embeddings all_genes   # GenePT + STRING vectors for all measured genes
-python -I -m pertact.evaluate table
+python -I scripts/report_tables.py          # the results tables of REPORT.md
+python -I scripts/perturbation_map.py       # results/perturbation_map.json, which build_site.py reads
 python -I scripts/build_site.py
 ```
 
@@ -88,7 +89,7 @@ Refitting scVI or node2vec may not reproduce the saved values exactly. The cell 
 **Week 2**
 
 ```bash
-python -I -m pertact.ot --check             # POT agreement, synthetic shift recovery
+python -I -m pertact.ot --check             # the pairing recovers a known shift on synthetic clouds
 python -I -m pertact.ot                     # OT pairs: both spaces, train and val
 python -I -m pertact.infonce tune           # temperature on validation retrieval, seed 0
 python -I -m pertact.infonce train          # both spaces x 3 seeds
@@ -101,21 +102,47 @@ python -I -m pertact.evaluate actions --variants infonce_unit --references --tag
 python -I -m pertact.evaluate actions --variants mean_shift_unit --references --tag unit_meanshift
 python -I scripts/week2_direction_diagnostics.py
 python -I scripts/week2_decoder_summary.py
+python -I scripts/plot_ot_pairs.py          # figures/ot_pairs_X_pca_g.png, shown in the Walkthrough
+python -I scripts/build_walkthrough.py      # Walkthrough tab of site/index.html
+python -I scripts/build_code_tour.py        # Code tab of site/index.html; run again after any code change
 ```
 
-`pertact.retrieval` skips any InfoNCE or anchor file that does not exist, without an error. Check that
+The pairing is solved with the POT library. Until 2026-11-11 it used a hand-written Sinkhorn solver. What that solver
+produced (the pairs, the InfoNCE vectors trained on them, and both tests) is kept in `results/legacy_solver/`. Between
+the two, a cell's set of partners differs for at most 0.16% of the cells in a file, and validation scores move by at
+most 0.005 (median 0.00015). `results/legacy_solver/README.md` has the tables.
+
+The decoder test (`evaluate actions`) has not been rerun since that switch. The scores in `results/week2_decoder/`
+come from decoders trained on the earlier vectors. Those decoders were moved to `models/decoders_legacy_solver/`, so
+the five `evaluate actions` commands above train new ones instead of reloading them.
+
+`pertact.retrieval` leaves out any InfoNCE or anchor file that does not exist, with a warning. Check that
 `embeddings/` has all 12 `infonce*` files (2 spaces x 3 seeds x 2 variants) before running it.
 
 The `actions` command scores validation singles only and never loads a test cell.
+
+## Checks
+
+```bash
+python -I -m pytest                         # 15 tests on small synthetic inputs, a few seconds
+python -I scripts/check_outputs.py          # reruns the cheap steps and compares them with the saved results, about 4 minutes
+python -I scripts/check_outputs.py --steps ot   # the OT pairing, about 16 minutes
+```
+
+`check_outputs.py` writes into temporary folders only. It covers the split, the baselines, rescoring, the one-hot and
+PCA-loading embeddings, InfoNCE training in PCA-50, both Week 2 tests and the summary scripts. It does not retrain
+scVI, node2vec or the decoders.
 
 ## Layout
 
 | path | contents | in git |
 |---|---|---|
-| `src/pertact/` | package: data, splits, encoders, embeddings, decoders, evaluation, OT, InfoNCE, retrieval | yes |
-| `scripts/` | report tables, site refresh, Week 2 diagnostics and summaries | yes |
+| `src/pertact/` | package: data, splits, encoders, embeddings, decoders, metrics, runs, OT pairing, action vectors, InfoNCE, the two tests, the decoder test | yes |
+| `tests/` | fast tests on small synthetic inputs | yes |
+| `scripts/` | report tables, Week 2 diagnostics and summaries, the OT pair plot, the output check, and the site builders | yes |
 | `config.yaml`, `splits.json`, `env.txt` | settings, cell splits, package versions | yes |
 | `embeddings/` | perturbation embeddings and learned actions | yes, except `genept_all_genes.npz` |
-| `results/` | metrics, OT pairs, tuning, summaries | yes, except the two `predictions/` folders |
-| `figures/`, `logs/`, `site/`, `REPORT*.md` | figures, run logs, progress site, write-ups | yes |
+| `results/` | metrics, OT pairs, tuning, summaries; `legacy_solver/` is the Week 2 output of the earlier OT solver | yes, except the two `predictions/` folders |
+| `figures/`, `logs/`, `REPORT*.md` | figures, run logs, write-ups | yes |
+| `site/` | progress site; the site builders in `scripts/` edit `site/index.html` in place, so they need that file | no |
 | `data/`, `models/` | raw and processed data, trained models | no |

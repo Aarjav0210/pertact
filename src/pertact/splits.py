@@ -15,13 +15,16 @@ import anndata as ad
 import numpy as np
 import pandas as pd
 
-from .config import get_logger, load_config, path, read_json, write_json
+from .config import get_logger, load_config, path, write_json
 from .data import CONTROL, condition_genes
 
 log = get_logger("splits")
 
 
 def make_splits(obs: pd.DataFrame, cfg: dict) -> dict:
+    """Assign every cell to train, val, test or excluded. 20% of each single's cells go to val; controls are split
+    within each gem group; doubles whose two genes are both singles go to test. Asserts that the result is a
+    partition and that no double cell is in train or val."""
     s = cfg["splits"]
     rng = np.random.default_rng(cfg["seed"])
     cond = obs["condition"].astype(str)
@@ -77,11 +80,8 @@ def make_splits(obs: pd.DataFrame, cfg: dict) -> dict:
     }
 
 
-def load_splits(cfg: dict) -> dict:
-    return read_json(path(cfg, "splits"))
-
-
 def main():
+    """Build the split and write splits.json."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default=None)
     cfg = load_config(ap.parse_args().config)

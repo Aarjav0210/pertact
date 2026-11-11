@@ -2,6 +2,8 @@
 
 Builds on Week 1 (`REPORT.md`): same processed data, splits and frozen state embeddings. Nothing here touches the 127 test doubles. Modules: `src/pertact/ot.py`, `infonce.py`, `retrieval.py`; settings under `ot:` and `infonce:` in `config.yaml`.
 
+**Rerun on 2026-11-11 with the POT solver.** The pairing first used a hand-written Sinkhorn solver. It now calls the POT library, and the pairs, the action vectors and both tests were regenerated with it. Every number in this report is from that rerun, except the decoder scores (section 5.4, and where sections 1 and 5.5 quote them), which were not rerun (see the note in 5.4). The chosen temperatures and anchor weight did not change, and validation scores moved by at most 0.005. The earlier solver's files are in `results/legacy_solver/`, with tables of the differences.
+
 **Design decisions (agreed before the runs)**
 * **OT-partner positives:** each control's positive is its own OT partner, and the other cells of the same perturbation in the batch are negatives.
 * **Actions:** one free vector per gene.
@@ -11,7 +13,7 @@ Builds on Week 1 (`REPORT.md`): same processed data, splits and frozen state emb
 
 ### Entropic OT pairing (Sinkhorn-Knopp)
 * **What:** for each single perturbation and gem group, couple that group's control cells to the perturbation's cells. The coupling minimises total squared displacement in the state space, minus ε × entropy, with uniform weights on both sides.
-* **Solver:** Sinkhorn-Knopp scaling in the log domain (dual potentials), stopping when the L1 marginal error is below 1e-6.
+* **Solver:** the POT library's log-domain Sinkhorn-Knopp (`ot.sinkhorn`, method `sinkhorn_log`). It stops when the error on the column sums of the plan falls below 1e-9, with a limit of 10,000 iterations.
 * **Splits:** training and validation cells are paired separately, each with its own split's controls.
 * **Blur:** ε = 0.05 × the median squared distance between control cells. An earlier version scaled ε by the control-to-perturbed cost, which made strongly perturbed genes blurrier simply because they moved further. It was changed before any real-data run.
 * **Output:** for every perturbed cell, its 5 most-coupled controls and their renormalised weights (`results/ot/<space>__<split>.npz`).
@@ -77,15 +79,14 @@ Entropic OT does not produce an action. It only says which control cells each pe
 **Q1. Does entropic OT give meaningful pairs?**
 * *Answer: yes.*
 * *Checks:*
-  * Agrees with the POT library to 1e-8 relative difference.
   * On a synthetic cloud shifted by a known vector, the true source cell is the top partner for 100% of cells.
   * Translating the controls leaves the plan unchanged, as it must for a quadratic cost.
-* *Real data:* all 3,348 problems converged (marginal error ≤ 1e-6, 70–140 median iterations). OT partners are about half as far as random same-gem controls:
+* *Real data:* all 3,348 problems converged. The median problem took 100–190 iterations, depending on space and split, and the longest took 1,250, against a limit of 10,000. OT partners are about half as far as random same-gem controls:
 
 | space | split | partner cost: OT vs random | controls per cell (perplexity) |
 |---|---|---|---|
 | PCA-50 | train | 56.6 vs 109.4 | 75 |
-| PCA-50 | val | 63.3 vs 104.6 | 33 |
+| PCA-50 | val | 63.2 vs 104.6 | 33 |
 | scVI-30 | train | 14.5 vs 30.6 | 60 |
 | scVI-30 | val | 16.7 vs 29.5 | 30 |
 
@@ -100,19 +101,19 @@ Entropic OT does not produce an action. It only says which control cells each pe
 | PCA-50 | no action | 0.026 | 0.008 | 0.051 | 0.244 | 0.016 |
 | PCA-50 | shuffled | 0.023 | 0.007 | 0.047 | 0.228 | 0.016 |
 | PCA-50 | mean shift | 0.120 | 0.059 | 0.232 | 0.571 | 0.115 |
-| PCA-50 | **InfoNCE** | **0.181 ± 0.002** | **0.101** | **0.342** | **0.670** | **0.255** |
+| PCA-50 | **InfoNCE** | **0.181 ± 0.002** | **0.101** | **0.341** | **0.669** | **0.255** |
 | scVI-30 | no action | 0.031 | 0.009 | 0.064 | 0.312 | 0.017 |
 | scVI-30 | shuffled | 0.026 | 0.007 | 0.052 | 0.280 | 0.016 |
-| scVI-30 | mean shift | 0.133 | 0.066 | 0.266 | 0.652 | 0.126 |
-| scVI-30 | **InfoNCE** | **0.174 ± 0.002** | **0.092** | **0.339** | **0.706** | **0.245** |
+| scVI-30 | mean shift | 0.133 | 0.066 | 0.266 | 0.653 | 0.126 |
+| scVI-30 | **InfoNCE** | **0.174 ± 0.002** | **0.092** | **0.340** | **0.706** | **0.246** |
 
 * *Generalisation:* the gap from training to held-out cells is small: MRR 0.209 → 0.181 (PCA) and 0.190 → 0.174 (scVI).
 
 **Q3. Does that gain come from better directions or from longer actions?**
 * *Answer: mostly length.*
 * *Evidence:*
-  * InfoNCE actions point where the mean shift does (median cosine 0.80 PCA, 0.86 scVI; 0.88 / 0.95 for strong perturbations), but are 2.1× (PCA) and 2.4× (scVI) longer. Weak perturbations are 3.8–4.2× longer.
-  * Giving the mean shift InfoNCE's per-gene lengths reaches same_pert@10 0.227 / 0.249 (InfoNCE 0.255 / 0.245) and MRR 0.135 / 0.166 (InfoNCE 0.181 / 0.174).
+  * InfoNCE actions point where the mean shift does (median cosine 0.80 PCA, 0.86 scVI; 0.87 / 0.95 for strong perturbations), but are 2.1× (PCA) and 2.4× (scVI) longer. Weak perturbations are 3.8–4.2× longer.
+  * Giving the mean shift InfoNCE's per-gene lengths reaches same_pert@10 0.227 / 0.249 (InfoNCE 0.255 / 0.246) and MRR 0.135 / 0.166 (InfoNCE 0.181 / 0.174).
   * Giving InfoNCE directions the mean-shift lengths drops MRR to 0.114 / 0.125.
   * So in PCA about 0.05 MRR is genuinely directional; in scVI nearly all of the gain is length.
 * *Why:* InfoNCE only fixes relative distances. Stepping further along the action's direction moves the query away from other perturbations' cells, most of which sit near the control cloud, faster than it moves away from its own partner. The loss therefore rewards overshooting.
@@ -123,11 +124,11 @@ Entropic OT does not produce an action. It only says which control cells each pe
 
 | space | mean shift | InfoNCE | InfoNCE calibrated (α ≈ 0.42) | InfoNCE direction, mean-shift length |
 |---|---|---|---|---|
-| PCA-50 | 0.235 / 0.413 | 0.095 / 0.433 | **0.248 / 0.469** | **0.255** / 0.451 |
-| scVI-30 | **0.191** / 0.385 | 0.093 / 0.337 | 0.188 / 0.386 | 0.187 / **0.391** |
+| PCA-50 | 0.235 / 0.413 | 0.095 / 0.432 | **0.248 / 0.469** | **0.255** / 0.451 |
+| scVI-30 | **0.191** / 0.385 | 0.093 / 0.336 | 0.188 / 0.385 | 0.187 / **0.391** |
 
 * *Why raw InfoNCE fails:* its overshooting actions leave "no perturbation" as the nearest candidate for 76–80% of held-out cells.
-* *Calibration:* one scalar, fitted on training pairs only, fixes that (α = 0.414–0.431 across seeds and spaces).
+* *Calibration:* one scalar, fitted on training pairs only, fixes that (α = 0.415–0.431 across seeds and spaces).
 * *By effect strength:*
   * **Strong perturbations:** calibrated InfoNCE is best (PCA 0.441 vs 0.320; scVI 0.458 vs 0.382).
   * **Weak perturbations:** every method is near chance (≤ 0.10). This matches Week 1's finding that 18 singles barely raise their own target.
@@ -151,7 +152,7 @@ The learned actions have good directions and wrong lengths. Composing them as f(
 Section 5 (addendum) tests these options.
 
 ## 4. Caveats
-* **τ selection:** the selection signal is retrieval MRR, not the loss. At small τ, the validation loss barely drops below chance (PCA τ = 0.03: 5.37–5.47 vs ln 256 = 5.55), because a few far-off cases dominate it while ranking still improves. Larger τ raises same_pert@10 (0.475 at τ = 0.3, PCA) but lowers MRR.
+* **τ selection:** the selection signal is retrieval MRR, not the loss. At small τ, the validation loss barely drops below chance (PCA τ = 0.03: 5.33–5.48 vs ln 256 = 5.55), because a few far-off cases dominate it while ranking still improves. Larger τ raises same_pert@10 (0.476 at τ = 0.3, PCA) but lowers MRR.
 * **Partner sampling:** OT partners are sampled from the top 5 couplings. The full coupling is blurrier (perplexity 30–75), so "the" partner is a soft notion.
 * **Seed scope:** only InfoNCE has seeds; the references are deterministic.
 * **Outputs:**
@@ -198,10 +199,10 @@ Still Week 2 work, using the same OT pairs, OT-partner positive definition, batc
 
 | variant | PCA-50 | scVI-30 | in range, PCA | in range, scVI |
 |---|---|---|---|---|
-| 1 InfoNCE as trained | 2.06 [0.89–11.3] | 2.39 [1.08–9.20] | 5% | 2% |
-| 2a global α (α = 0.42–0.43) | 0.88 [0.38–4.83] | 1.00 [0.45–3.86] | 30% | 34% |
+| 1 InfoNCE as trained | 2.06 [0.89–11.3] | 2.39 [1.08–9.21] | 5% | 2% |
+| 2a global α (α = 0.42–0.43) | 0.88 [0.38–4.82] | 1.00 [0.45–3.86] | 30% | 34% |
 | 2b per action (c_a median 0.39 / 0.34) | 0.80 [0.38–0.94] | 0.85 [0.33–0.98] | 49% | 57% |
-| 3 anchor, ρ = 1 (strong, see below) | 1.17 [0.89–2.71] | 1.30 [0.92–2.80] | 68% | 34% |
+| 3 anchor, ρ = 1 (strong, see below) | 1.18 [0.87–2.65] | 1.30 [0.92–2.80] | 69% | 34% |
 
 * **By effect strength:** raw InfoNCE overshoots weak perturbations most (median 3.7× PCA, 4.2× scVI; strong ones 1.5× / 1.6×).
 * **Global α cannot fix that spread.** It leaves weak perturbations 1.6–1.8× too long and strong ones at 0.65–0.69×.
@@ -212,11 +213,11 @@ Still Week 2 work, using the same OT pairs, OT-partner positive definition, batc
 | variant | instance MRR (PCA / scVI) | same_pert@10 | identification top-1, pooled-OT start | top-1, strong tertile | top-1, gem-mean start |
 |---|---|---|---|---|---|
 | mean shift (ref) | 0.120 / 0.133 | 0.115 / 0.126 | 0.235 / 0.191 | 0.320 / 0.382 | 0.216 / 0.264 |
-| 1 InfoNCE as trained | **0.181 / 0.174** | **0.255 / 0.245** | 0.095 / 0.093 | 0.248 / 0.250 | 0.160 / 0.198 |
+| 1 InfoNCE as trained | **0.181 / 0.174** | **0.255 / 0.246** | 0.095 / 0.093 | 0.248 / 0.249 | 0.161 / 0.198 |
 | 2a global α | 0.082 / 0.087 | 0.067 / 0.065 | 0.248 / 0.188 | **0.441 / 0.458** | 0.246 / 0.258 |
-| 2b per action | 0.092 / 0.116 | 0.090 / 0.113 | **0.268** / 0.190 | 0.394 / 0.402 | 0.257 / 0.260 |
-| 3 anchor, ρ = 1 | 0.136 / 0.154 | 0.138 / 0.158 | 0.206 / 0.156 | 0.296 / 0.311 | 0.212 / 0.245 |
-| *InfoNCE direction at mean-shift length (control)* | 0.114 / 0.125 | 0.116 / 0.122 | 0.255 / 0.187 | 0.358 / 0.390 | 0.262 / 0.265 |
+| 2b per action | 0.092 / 0.116 | 0.090 / 0.113 | **0.268** / 0.190 | 0.394 / 0.403 | 0.257 / 0.261 |
+| 3 anchor, ρ = 1 | 0.136 / 0.154 | 0.138 / 0.158 | 0.207 / 0.156 | 0.292 / 0.311 | 0.211 / 0.245 |
+| *InfoNCE direction at mean-shift length (control)* | 0.114 / 0.125 | 0.116 / 0.122 | 0.255 / 0.187 | 0.357 / 0.390 | 0.262 / 0.265 |
 
 Chance top-1 is 1/106. The weak tertile is near chance for every variant (≤ 0.10).
 
@@ -231,15 +232,15 @@ Chance top-1 is 1/106. The weak tertile is near chance for every variant (≤ 0.
 
 | ρ (anchor weight as a fraction of InfoNCE's own positive pull) | λ = ρ/τ, PCA / scVI | anchor share of the validation loss, PCA / scVI | median length ratio, PCA / scVI | val instance MRR, PCA / scVI |
 |---|---|---|---|---|
-| 0 | 0 | 0 / 0 | 2.07 / 2.40 | 0.183 / 0.173 |
-| 0.01 | 0.33 / 0.1 | 4% / 2% | 1.98 / 2.30 | 0.182 / 0.174 |
+| 0 | 0 | 0 / 0 | 2.06 / 2.40 | 0.183 / 0.173 |
+| 0.01 | 0.33 / 0.1 | 4% / 2% | 1.97 / 2.29 | 0.182 / 0.174 |
 | 0.03 | 1 / 0.3 | 10% / 5% | 1.84 / 2.13 | 0.180 / 0.174 |
 | 0.1 | 3.3 / 1 | 24% / 14% | 1.59 / 1.84 | 0.167 / 0.173 |
-| 0.3 | 10 / 3 | 46% / 32% | 1.34 / 1.59 | 0.154 / 0.166 |
-| **1** | **33 / 10** | **73% / 59%** | **1.17** / 1.30 | 0.136 / 0.153 |
+| 0.3 | 10 / 3 | 46% / 32% | 1.33 / 1.59 | 0.153 / 0.166 |
+| **1** | **33 / 10** | **73% / 59%** | **1.18** / 1.30 | 0.136 / 0.153 |
 
   * **Flagged: the selected anchor is strong.** The rule picked ρ = 1 (λ = 33 in PCA-50, 10 in scVI-30), the only grid value that reaches the target, and only in PCA. scVI-30 stays at 1.30× even at ρ = 1. At this weight the squared-error term is 59–73% of the loss: this is the reconstruction objective with some InfoNCE, not InfoNCE with a weak anchor.
-  * **What it gives:** actions that point almost exactly along the mean shift (median cosine 0.97 / 0.96, vs 0.80 / 0.85 unanchored) and are still 17–30% long. They beat the mean shift on retrieval (0.136 vs 0.120; 0.154 vs 0.133), plausibly from that remaining overshoot (Q3). They lose on identification without rescaling (0.206 vs 0.235; 0.156 vs 0.191).
+  * **What it gives:** actions that point almost exactly along the mean shift (median cosine 0.97 / 0.96, vs 0.80 / 0.85 unanchored) and are still 18–30% long. They beat the mean shift on retrieval (0.136 vs 0.120; 0.154 vs 0.133), plausibly from that remaining overshoot (Q3). They lose on identification without rescaling (0.207 vs 0.235; 0.156 vs 0.191).
   * **Weak settings:** at ρ ≤ 0.03 (anchor ≤ 10% of the loss) the median overshoot only drops from 2.1× to 1.8× (PCA) and from 2.4× to 2.1× (scVI).
   * **Why the anchor must be so strong:** InfoNCE's positive logit already applies the same squared-error pull, with weight 1/τ. The overshoot comes from the denominator, which pushes each query away from other perturbations' cells. The anchor only adds to the pull, so it shifts the balance only once its weight is comparable to InfoNCE's own (ρ ≈ 1).
   * Because the anchor this strong overlaps with the planned reconstruction ablation, these actions are reported but not carried forward.
@@ -254,6 +255,7 @@ Chance top-1 is 1/106. The weak tertile is near chance for every variant (≤ 0.
 * **Note:** every embedding goes through the same unit-mean-norm step before the decoder, which removes any global scale. 2a would therefore reach the decoder exactly as the raw actions do. 2b differs because it changes relative lengths between perturbations.
 
 ### 5.4 Decoder smoke test (validation singles, not the Week 4 evaluation)
+* **Not rerun on the POT pairs.** The decoders below were trained on action vectors made from the earlier solver's pairs (`results/legacy_solver/embeddings/`), and the scores in this section are from those runs. The new vectors are nearly the same: over the 630 InfoNCE vectors (105 genes × 2 spaces × 3 seeds) the cosine between old and new has a median of 0.9998, 95% are at 0.99 or above and the lowest is 0.74 (KMT2A, scVI-30, seed 1); every mean-shift vector stays above 0.999. The two diagnostics tables (direction spread, and length and overlap) were recomputed from the new vectors. The 60 decoders are in `models/decoders_legacy_solver/`, so `evaluate actions` trains new ones instead of reloading them.
 * **Setup:**
   * The per-action-scaled InfoNCE actions (2b) are frozen and used as the perturbation embedding of the Week 1 latent-additive and decoder-only models, in both spaces. InfoNCE seed s is paired with decoder seed s.
   * Week 1 hyperparameters throughout: hidden 1024, latent 128, dropout 0, lr 3e-4, ≤150 epochs, early stopping on validation-single loss, and the same unit-mean-norm step.
@@ -302,7 +304,7 @@ Mean ± sd over 3 seeds. *Weak third*: the 35 perturbations with the smallest me
 
     | unit directions | median pairwise cosine | median nearest-neighbour cosine | participation ratio (effective dimensions) |
     |---|---|---|---|
-    | InfoNCE, PCA-50 / scVI-30 | 0.14 / 0.04 | 0.61 / 0.66 | 13.0 / 12.8 |
+    | InfoNCE, PCA-50 / scVI-30 | 0.14 / 0.04 | 0.61 / 0.67 | 13.0 / 12.8 |
     | mean shift, PCA-50 / scVI-30 | 0.49 / 0.22 | 0.90 / 0.83 | 3.1 / 6.3 |
 
   * The mean shifts share one large common direction (the norm of their mean unit vector is 0.59 in PCA-50, against 0.38 for InfoNCE). InfoNCE spreads its actions out, as its denominator rewards. With only 105 seen perturbations, the decoder evidently separates either set equally well, so the spread does not show up in this test. It may matter for unseen combinations, where the decoder cannot memorise each input.
@@ -335,4 +337,4 @@ Mean ± sd over 3 seeds. *Weak third*: the 35 perturbations with the smallest me
   * summary tables: `results/week2_decoder/summary.csv` and `paired_length_vs_unit.csv`, from `scripts/week2_decoder_summary.py`;
   * per-perturbation scores: `smoke_per_perturbation__*.csv`;
   * predictions: `results/week2_decoder/predictions/`;
-  * models: `models/decoders/<embedding>__<decoder>__s<seed>.pt`.
+  * models: `models/decoders_legacy_solver/<embedding>__<decoder>__s<seed>.pt` (trained on the earlier vectors; a new run writes to `models/decoders/`).

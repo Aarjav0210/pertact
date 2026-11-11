@@ -1,10 +1,10 @@
 {
  "steps": 1300,
- "best_val_loss": 7.876625657081604,
+ "best_val_loss": 7.904512548446656,
  "D0": 33.052825927734375,
  "rho": 1.0,
- "val_infonce_part": 3.270539093017578,
- "val_anchor_share": 0.5847791636413305,
+ "val_infonce_part": 3.2827967762947083,
+ "val_anchor_share": 0.5846933310340785,
  "tau": 0.1,
  "space": "X_scvi30",
  "seed": 1

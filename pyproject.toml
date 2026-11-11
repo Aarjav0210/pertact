@@ -5,8 +5,34 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pertact"
 version = "0.1.0"
-description = "Perturbation representations as actions: Norman 2019 data, frozen encoders, baseline embeddings, latent additive decoder"
+description = "Perturbation representations as actions: Norman 2019 data, frozen encoders, baseline embeddings, latent additive decoder, OT pairing and InfoNCE actions"
 requires-python = ">=3.11"
+# The packages the code imports, at the versions the results were produced with. env.txt lists the full environment.
+dependencies = [
+    "anndata==0.12.19",
+    "gensim==4.4.0",
+    "h5py==3.16.0",
+    "matplotlib==3.11.2",
+    "numba==0.68.1",
+    "numpy==1.26.4",
+    "pandas==2.3.3",
+    "pecanpy==2.0.9",
+    "pot==0.9.7.post1",
+    "pygments==2.21.0",
+    "pyyaml==6.0.3",
+    "scanpy==1.11.5",
+    "scikit-learn==1.9.1",
+    "scipy==1.17.1",
+    "scvi-tools==1.4.2",
+    "torch==2.15.0",
+    "umap-learn==0.5.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.2.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

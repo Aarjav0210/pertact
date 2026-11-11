@@ -1,0 +1,200 @@
+# Week 2 rerun on the POT pairs, 2026-11-11 16:15
+
+=== python -I -m pertact.ot --check
+16:15:50 ot INFO synthetic_true_source_is_top1: 1.0
+16:15:50 ot INFO synthetic_true_source_in_top5: 1.0
+16:15:50 ot INFO plan_unchanged_by_translation: True
+16:15:50 ot INFO synthetic_info: {'iters': 70, 'marginal_err': 8.91864707086576e-16, 'perplexity': 20.655095769516556}
+=== done in 6s
+
+=== python -I -m pertact.infonce tune
+16:16:05 infonce INFO X_pca_g seed 0 tau 0.01 rho 0: 1400 steps, best val loss 14.9995 (chance 5.5452), 4s
+16:16:07 infonce INFO   val instance retrieval: MRR 0.1761, recall@10 0.331, same-perturbation@10 0.233
+16:16:11 infonce INFO X_pca_g seed 0 tau 0.03 rho 0: 1400 steps, best val loss 5.4752 (chance 5.5452), 4s
+16:16:13 infonce INFO   val instance retrieval: MRR 0.1829, recall@10 0.344, same-perturbation@10 0.256
+16:16:22 infonce INFO X_pca_g seed 0 tau 0.1 rho 0: 3700 steps, best val loss 3.1832 (chance 5.5452), 9s
+16:16:24 infonce INFO   val instance retrieval: MRR 0.1762, recall@10 0.351, same-perturbation@10 0.380
+16:16:32 infonce INFO X_pca_g seed 0 tau 0.3 rho 0: 3700 steps, best val loss 3.5072 (chance 5.5452), 8s
+16:16:34 infonce INFO   val instance retrieval: MRR 0.1008, recall@10 0.218, same-perturbation@10 0.476
+16:16:40 infonce INFO X_scvi30 seed 0 tau 0.01 rho 0: 2000 steps, best val loss 15.1795 (chance 5.5452), 5s
+16:16:42 infonce INFO   val instance retrieval: MRR 0.1536, recall@10 0.304, same-perturbation@10 0.165
+16:16:47 infonce INFO X_scvi30 seed 0 tau 0.03 rho 0: 2000 steps, best val loss 5.4511 (chance 5.5452), 5s
+16:16:49 infonce INFO   val instance retrieval: MRR 0.1575, recall@10 0.311, same-perturbation@10 0.173
+16:16:54 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0: 2000 steps, best val loss 3.0652 (chance 5.5452), 4s
+16:16:55 infonce INFO   val instance retrieval: MRR 0.1727, recall@10 0.338, same-perturbation@10 0.244
+16:17:01 infonce INFO X_scvi30 seed 0 tau 0.3 rho 0: 2200 steps, best val loss 3.6182 (chance 5.5452), 5s
+16:17:03 infonce INFO   val instance retrieval: MRR 0.1024, recall@10 0.216, same-perturbation@10 0.324
+16:17:03 infonce INFO best tau: {'X_pca_g': 0.03, 'X_scvi30': 0.1}
+=== done in 74s
+
+=== python -I -m pertact.infonce train
+16:17:18 infonce INFO X_pca_g seed 0 tau 0.03 rho 0: 1400 steps, best val loss 5.4752 (chance 5.5452), 3s
+16:17:21 infonce INFO X_pca_g seed 1 tau 0.03 rho 0: 1400 steps, best val loss 5.3345 (chance 5.5452), 3s
+16:17:25 infonce INFO X_pca_g seed 2 tau 0.03 rho 0: 1500 steps, best val loss 5.3830 (chance 5.5452), 4s
+16:17:29 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0: 2000 steps, best val loss 3.0652 (chance 5.5452), 4s
+16:17:38 infonce INFO X_scvi30 seed 1 tau 0.1 rho 0: 3800 steps, best val loss 3.1166 (chance 5.5452), 8s
+16:17:44 infonce INFO X_scvi30 seed 2 tau 0.1 rho 0: 2800 steps, best val loss 3.1144 (chance 5.5452), 6s
+=== done in 41s
+
+=== python -I -m pertact.infonce anchor
+16:17:59 infonce INFO X_pca_g seed 0 tau 0.03 rho 0: 1400 steps, best val loss 5.4752 (chance 5.5452), 3s
+16:18:01 infonce INFO   rho 0: length ratio median 2.06 (0.89-10.67), anchor share of val loss 0.000, val MRR 0.183
+16:18:05 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.01: 1400 steps, best val loss 5.6637 (chance 5.5452), 3s
+16:18:07 infonce INFO   rho 0.01: length ratio median 1.97 (0.89-10.00), anchor share of val loss 0.036, val MRR 0.182
+16:18:10 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.03: 1400 steps, best val loss 6.0285 (chance 5.5452), 3s
+16:18:12 infonce INFO   rho 0.03: length ratio median 1.84 (0.88-8.92), anchor share of val loss 0.096, val MRR 0.180
+16:18:20 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.1: 2800 steps, best val loss 7.2258 (chance 5.5452), 8s
+16:18:22 infonce INFO   rho 0.1: length ratio median 1.59 (0.91-7.00), anchor share of val loss 0.240, val MRR 0.167
+16:18:29 infonce INFO X_pca_g seed 0 tau 0.03 rho 0.3: 2800 steps, best val loss 10.4631 (chance 5.5452), 7s
+16:18:31 infonce INFO   rho 0.3: length ratio median 1.33 (0.91-4.55), anchor share of val loss 0.462, val MRR 0.153
+16:18:37 infonce INFO X_pca_g seed 0 tau 0.03 rho 1: 2100 steps, best val loss 21.3601 (chance 5.5452), 5s
+16:18:39 infonce INFO   rho 1: length ratio median 1.18 (0.89-2.63), anchor share of val loss 0.728, val MRR 0.136
+16:18:44 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0: 2000 steps, best val loss 3.0652 (chance 5.5452), 4s
+16:18:46 infonce INFO   rho 0: length ratio median 2.40 (1.09-8.97), anchor share of val loss 0.000, val MRR 0.173
+16:18:51 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.01: 2000 steps, best val loss 3.1290 (chance 5.5452), 5s
+16:18:53 infonce INFO   rho 0.01: length ratio median 2.29 (1.06-8.21), anchor share of val loss 0.019, val MRR 0.174
+16:18:58 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.03: 2000 steps, best val loss 3.2458 (chance 5.5452), 5s
+16:19:00 infonce INFO   rho 0.03: length ratio median 2.13 (1.03-7.24), anchor share of val loss 0.053, val MRR 0.174
+16:19:06 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.1: 2000 steps, best val loss 3.6185 (chance 5.5452), 5s
+16:19:07 infonce INFO   rho 0.1: length ratio median 1.84 (1.01-5.34), anchor share of val loss 0.143, val MRR 0.173
+16:19:12 infonce INFO X_scvi30 seed 0 tau 0.1 rho 0.3: 2100 steps, best val loss 4.5953 (chance 5.5452), 5s
+16:19:15 infonce INFO   rho 0.3: length ratio median 1.59 (0.94-4.04), anchor share of val loss 0.316, val MRR 0.166
+16:19:20 infonce INFO X_scvi30 seed 0 tau 0.1 rho 1: 2100 steps, best val loss 7.8520 (chance 5.5452), 5s
+16:19:22 infonce INFO   rho 1: length ratio median 1.30 (0.90-2.78), anchor share of val loss 0.590, val MRR 0.153
+16:19:22 infonce WARNING X_scvi30: no rho on the grid reached the length target; using the largest (1)
+16:19:22 infonce INFO chosen rho: {'X_pca_g': 1.0, 'X_scvi30': 1.0}
+16:19:27 infonce INFO X_pca_g seed 0 tau 0.03 rho 1: 2100 steps, best val loss 21.3601 (chance 5.5452), 5s
+16:19:31 infonce INFO X_pca_g seed 1 tau 0.03 rho 1: 1300 steps, best val loss 21.0093 (chance 5.5452), 4s
+16:19:35 infonce INFO X_pca_g seed 2 tau 0.03 rho 1: 1700 steps, best val loss 21.1979 (chance 5.5452), 4s
+16:19:40 infonce INFO X_scvi30 seed 0 tau 0.1 rho 1: 2100 steps, best val loss 7.8520 (chance 5.5452), 5s
+16:19:43 infonce INFO X_scvi30 seed 1 tau 0.1 rho 1: 1300 steps, best val loss 7.9045 (chance 5.5452), 3s
+16:19:46 infonce INFO X_scvi30 seed 2 tau 0.1 rho 1: 1100 steps, best val loss 7.9146 (chance 5.5452), 3s
+=== done in 122s
+
+=== python -I -m pertact.retrieval
+16:19:56 retrieval INFO X_pca_g seed 0: per-action scales c_a median 0.379 (range 0.059 to 1.058)
+16:19:56 retrieval INFO X_pca_g seed 0: InfoNCE length calibration alpha = 0.426 (fitted on training pairs)
+16:19:56 retrieval INFO X_pca_g seed 0: anchored InfoNCE, least-squares alpha would be 0.871
+16:19:56 retrieval INFO X_pca_g seed 1: per-action scales c_a median 0.386 (range 0.054 to 1.073)
+16:19:56 retrieval INFO X_pca_g seed 1: InfoNCE length calibration alpha = 0.431 (fitted on training pairs)
+16:19:56 retrieval INFO X_pca_g seed 1: anchored InfoNCE, least-squares alpha would be 0.895
+16:19:56 retrieval INFO X_pca_g seed 2: per-action scales c_a median 0.393 (range 0.051 to 1.052)
+16:19:56 retrieval INFO X_pca_g seed 2: InfoNCE length calibration alpha = 0.423 (fitted on training pairs)
+16:19:56 retrieval INFO X_pca_g seed 2: anchored InfoNCE, least-squares alpha would be 0.876
+16:20:02 retrieval INFO X_pca_g   mean_shift           s0 | val instance MRR 0.120 R@10 0.232 same@10 0.115
+16:20:09 retrieval INFO X_pca_g   zero                 s0 | val instance MRR 0.026 R@10 0.051 same@10 0.016
+16:20:14 retrieval INFO X_pca_g   shuffled_mean_shift  s0 | val instance MRR 0.023 R@10 0.047 same@10 0.016
+16:20:20 retrieval INFO X_pca_g   infonce              s0 | val instance MRR 0.183 R@10 0.344 same@10 0.256
+16:20:25 retrieval INFO X_pca_g   infonce_calibrated   s0 | val instance MRR 0.082 R@10 0.165 same@10 0.066
+16:20:31 retrieval INFO X_pca_g   infonce_scaled_per_action s0 | val instance MRR 0.092 R@10 0.182 same@10 0.091
+16:20:37 retrieval INFO X_pca_g   infonce_dir_meanshift_len s0 | val instance MRR 0.113 R@10 0.220 same@10 0.116
+16:20:43 retrieval INFO X_pca_g   meanshift_dir_infonce_len s0 | val instance MRR 0.135 R@10 0.265 same@10 0.228
+16:20:48 retrieval INFO X_pca_g   infonce_anchor       s0 | val instance MRR 0.136 R@10 0.262 same@10 0.140
+16:20:55 retrieval INFO X_pca_g   infonce              s1 | val instance MRR 0.180 R@10 0.338 same@10 0.251
+16:21:00 retrieval INFO X_pca_g   infonce_calibrated   s1 | val instance MRR 0.082 R@10 0.161 same@10 0.066
+16:21:06 retrieval INFO X_pca_g   infonce_scaled_per_action s1 | val instance MRR 0.091 R@10 0.179 same@10 0.087
+16:21:12 retrieval INFO X_pca_g   infonce_dir_meanshift_len s1 | val instance MRR 0.114 R@10 0.222 same@10 0.115
+16:21:17 retrieval INFO X_pca_g   meanshift_dir_infonce_len s1 | val instance MRR 0.136 R@10 0.264 same@10 0.225
+16:21:23 retrieval INFO X_pca_g   infonce_anchor       s1 | val instance MRR 0.136 R@10 0.260 same@10 0.137
+16:21:29 retrieval INFO X_pca_g   infonce              s2 | val instance MRR 0.180 R@10 0.342 same@10 0.259
+16:21:34 retrieval INFO X_pca_g   infonce_calibrated   s2 | val instance MRR 0.082 R@10 0.163 same@10 0.067
+16:21:40 retrieval INFO X_pca_g   infonce_scaled_per_action s2 | val instance MRR 0.093 R@10 0.181 same@10 0.092
+16:21:46 retrieval INFO X_pca_g   infonce_dir_meanshift_len s2 | val instance MRR 0.115 R@10 0.221 same@10 0.117
+16:21:52 retrieval INFO X_pca_g   meanshift_dir_infonce_len s2 | val instance MRR 0.134 R@10 0.264 same@10 0.229
+16:21:58 retrieval INFO X_pca_g   infonce_anchor       s2 | val instance MRR 0.137 R@10 0.267 same@10 0.138
+16:21:58 retrieval INFO X_scvi30 seed 0: per-action scales c_a median 0.348 (range 0.041 to 0.887)
+16:21:58 retrieval INFO X_scvi30 seed 0: InfoNCE length calibration alpha = 0.424 (fitted on training pairs)
+16:21:58 retrieval INFO X_scvi30 seed 0: anchored InfoNCE, least-squares alpha would be 0.805
+16:21:58 retrieval INFO X_scvi30 seed 1: per-action scales c_a median 0.347 (range 0.041 to 0.884)
+16:21:58 retrieval INFO X_scvi30 seed 1: InfoNCE length calibration alpha = 0.415 (fitted on training pairs)
+16:21:58 retrieval INFO X_scvi30 seed 1: anchored InfoNCE, least-squares alpha would be 0.800
+16:21:58 retrieval INFO X_scvi30 seed 2: per-action scales c_a median 0.339 (range 0.041 to 0.939)
+16:21:58 retrieval INFO X_scvi30 seed 2: InfoNCE length calibration alpha = 0.419 (fitted on training pairs)
+16:21:58 retrieval INFO X_scvi30 seed 2: anchored InfoNCE, least-squares alpha would be 0.811
+16:22:04 retrieval INFO X_scvi30  mean_shift           s0 | val instance MRR 0.133 R@10 0.266 same@10 0.126
+16:22:10 retrieval INFO X_scvi30  zero                 s0 | val instance MRR 0.031 R@10 0.064 same@10 0.017
+16:22:16 retrieval INFO X_scvi30  shuffled_mean_shift  s0 | val instance MRR 0.026 R@10 0.052 same@10 0.016
+16:22:22 retrieval INFO X_scvi30  infonce              s0 | val instance MRR 0.173 R@10 0.338 same@10 0.244
+16:22:29 retrieval INFO X_scvi30  infonce_calibrated   s0 | val instance MRR 0.087 R@10 0.180 same@10 0.065
+16:22:37 retrieval INFO X_scvi30  infonce_scaled_per_action s0 | val instance MRR 0.116 R@10 0.234 same@10 0.113
+16:22:44 retrieval INFO X_scvi30  infonce_dir_meanshift_len s0 | val instance MRR 0.125 R@10 0.251 same@10 0.122
+16:22:49 retrieval INFO X_scvi30  meanshift_dir_infonce_len s0 | val instance MRR 0.167 R@10 0.327 same@10 0.248
+16:22:54 retrieval INFO X_scvi30  infonce_anchor       s0 | val instance MRR 0.153 R@10 0.298 same@10 0.160
+16:22:59 retrieval INFO X_scvi30  infonce              s1 | val instance MRR 0.176 R@10 0.345 same@10 0.248
+16:23:04 retrieval INFO X_scvi30  infonce_calibrated   s1 | val instance MRR 0.086 R@10 0.183 same@10 0.064
+16:23:09 retrieval INFO X_scvi30  infonce_scaled_per_action s1 | val instance MRR 0.117 R@10 0.237 same@10 0.113
+16:23:13 retrieval INFO X_scvi30  infonce_dir_meanshift_len s1 | val instance MRR 0.126 R@10 0.251 same@10 0.122
+16:23:18 retrieval INFO X_scvi30  meanshift_dir_infonce_len s1 | val instance MRR 0.166 R@10 0.325 same@10 0.251
+16:23:22 retrieval INFO X_scvi30  infonce_anchor       s1 | val instance MRR 0.156 R@10 0.305 same@10 0.163
+16:23:26 retrieval INFO X_scvi30  infonce              s2 | val instance MRR 0.172 R@10 0.337 same@10 0.244
+16:23:30 retrieval INFO X_scvi30  infonce_calibrated   s2 | val instance MRR 0.087 R@10 0.181 same@10 0.066
+16:23:35 retrieval INFO X_scvi30  infonce_scaled_per_action s2 | val instance MRR 0.117 R@10 0.235 same@10 0.112
+16:23:40 retrieval INFO X_scvi30  infonce_dir_meanshift_len s2 | val instance MRR 0.125 R@10 0.250 same@10 0.122
+16:23:45 retrieval INFO X_scvi30  meanshift_dir_infonce_len s2 | val instance MRR 0.166 R@10 0.325 same@10 0.249
+16:23:50 retrieval INFO X_scvi30  infonce_anchor       s2 | val instance MRR 0.151 R@10 0.297 same@10 0.152
+=== done in 243s
+
+=== python -I scripts/week2_direction_diagnostics.py
+                               median_pairwise_cos  median_nearest_neighbour_cos  participation_ratio  norm_of_mean_direction
+space    actions                                                                                                             
+X_pca_g  infonce_unit_pca                    0.143                         0.610               12.998                   0.383
+         mean_shift_unit_pca                 0.487                         0.903                3.098                   0.588
+X_scvi30 infonce_unit_scvi                   0.042                         0.666               12.752                   0.234
+         mean_shift_unit_scvi                0.222                         0.827                6.280                   0.446
+                                  dim  weak_strong_norm_ratio  weak_median_norm  norm_cv  weak_share_in_strong_top5  weak_max_cos_to_strong
+method                                                                                                                                     
+infonce_pca                      50.0                   0.758             0.866    0.141                      0.202                   0.393
+infonce_scaled_per_action_pca    50.0                   0.227             0.361    0.663                      0.182                   0.393
+infonce_scaled_per_action_scvi   30.0                   0.166             0.272    0.672                      0.184                   0.344
+infonce_scvi                     30.0                   0.728             0.833    0.149                      0.197                   0.344
+infonce_unit_pca                 50.0                   1.000             1.000    0.000                      0.201                   0.393
+infonce_unit_scvi                30.0                   1.000             1.000    0.000                      0.206                   0.344
+mean_shift_pca                   50.0                   0.295             0.450    0.556                      0.673                   0.768
+mean_shift_scvi                  30.0                   0.295             0.436    0.537                      0.497                   0.620
+mean_shift_unit_pca              50.0                   1.000             1.000    0.000                      0.673                   0.768
+mean_shift_unit_scvi             30.0                   1.000             1.000    0.000                      0.517                   0.620
+onehot                          105.0                   1.000             1.000    0.000                      0.000                   0.000
+pca_loadings                     32.0                   0.287             0.270    1.147                      0.138                   0.404
+=== done in 10s
+
+=== python -I scripts/week2_decoder_summary.py
+                                                all_105  all_105_sd  target_excluded   weak  weak_sd  medium  strong  n_seeds
+method                         decoder                                                                                       
+infonce_pca                    decoder_only       0.967       0.002            0.954  0.926    0.006   0.987   0.989        3
+                               latent_additive    0.948       0.006            0.939  0.877    0.014   0.980   0.988        3
+infonce_scaled_per_action_pca  decoder_only       0.955       0.004            0.946  0.890    0.011   0.986   0.989        3
+                               latent_additive    0.944       0.013            0.938  0.859    0.037   0.985   0.989        3
+infonce_scaled_per_action_scvi decoder_only       0.956       0.010            0.947  0.894    0.028   0.986   0.989        3
+                               latent_additive    0.936       0.013            0.930  0.834    0.037   0.986   0.989        3
+infonce_scvi                   decoder_only       0.965       0.001            0.952  0.921    0.002   0.986   0.989        3
+                               latent_additive    0.961       0.007            0.949  0.909    0.017   0.985   0.989        3
+infonce_unit_pca               decoder_only       0.967       0.002            0.954  0.925    0.005   0.987   0.989        3
+                               latent_additive    0.959       0.005            0.947  0.904    0.012   0.984   0.988        3
+infonce_unit_scvi              decoder_only       0.965       0.002            0.953  0.921    0.004   0.986   0.989        3
+                               latent_additive    0.965       0.004            0.951  0.919    0.011   0.986   0.989        3
+mean_shift_pca                 decoder_only       0.958       0.005            0.948  0.901    0.012   0.984   0.989        3
+                               latent_additive    0.924       0.016            0.924  0.813    0.035   0.973   0.986        3
+mean_shift_scvi                decoder_only       0.961       0.004            0.949  0.909    0.009   0.985   0.989        3
+                               latent_additive    0.940       0.012            0.936  0.853    0.031   0.980   0.988        3
+mean_shift_unit_pca            decoder_only       0.966       0.001            0.952  0.923    0.002   0.986   0.988        3
+                               latent_additive    0.961       0.004            0.949  0.911    0.008   0.982   0.988        3
+mean_shift_unit_scvi           decoder_only       0.966       0.000            0.953  0.924    0.001   0.986   0.989        3
+                               latent_additive    0.962       0.001            0.949  0.915    0.002   0.984   0.988        3
+onehot                         decoder_only       0.967       0.002            0.954  0.926    0.005   0.987   0.989        3
+                               latent_additive    0.959       0.005            0.949  0.904    0.014   0.985   0.989        3
+pca_loadings                   decoder_only       0.968       0.001            0.956  0.929    0.002   0.987   0.989        3
+                               latent_additive    0.966       0.002            0.952  0.923    0.003   0.986   0.987        3
+
+Weak third improves at unit length in 23 of 24 seed-paired comparisons.
+               fitted_lengths      unit_length         decoder  seed  weak_fitted  weak_unit  improved
+infonce_scaled_per_action_pca infonce_unit_pca latent_additive     2        0.893      0.891     False
+=== done in 1s
+
+=== python -I scripts/plot_ot_pairs.py
+   cond gem  n_ctrl  n_pert  shift_len   tier  ot_sq_len  ot_visible_share  ot_abs_dy  random_sq_len  random_visible_share  random_abs_dy
+  CEBPA   1     918      32     12.742 strong    248.367             0.803      1.630        297.144                 0.785          3.017
+    AHR   1     918      42      3.280 medium     55.877             0.293      1.463        108.178                 0.366          3.027
+BCL2L11   1     918      47      1.331   weak     38.558             0.143      1.036         80.007                 0.317          2.490
+wrote /Users/aarjavjain/Desktop/Dev/perturb-rl/figures/ot_pairs_X_pca_g.png
+=== done in 6s
+CHAIN FINISHED

@@ -9,23 +9,21 @@ Writes
 Effect-strength thirds are the PCA-50 ones from results/week2_effect_strength.csv, for every embedding.
 Run: .venv/bin/python -I scripts/week2_direction_diagnostics.py
 """
-import json
-
 import numpy as np
 import pandas as pd
 
-from pertact import evaluate as E
 from pertact.config import load_config, path
+from pertact.decoder_test import SPACE_SHORT, action_embedding
 from pertact.embeddings import load_embedding
+from pertact.encoders import load_all
 
 ACTIONS = ["infonce", "infonce_scaled_per_action", "mean_shift", "infonce_unit", "mean_shift_unit"]
-SPACES = ["X_pca_g", "X_scvi30"]
-SEEDS = [0, 1, 2]
 
 
 def main():
+    """Measure direction spread and length differences for every vector set, and write the two tables."""
     cfg = load_config(None)
-    adata, splits = E.load_all(cfg)
+    adata, splits = load_all(cfg)
     rd = path(cfg, "results_dir")
     tiers = pd.read_csv(rd / "week2_effect_strength.csv").query("space == 'X_pca_g'").set_index("gene")["tier"]
     train = set(splits["train_singles"])
@@ -35,11 +33,11 @@ def main():
             g, M = load_embedding(cfg, m)
             keep = [i for i, x in enumerate(g) if x in train]
             yield m, "", 0, [g[i] for i in keep], M[keep]
-        for sp in SPACES:
+        for sp in cfg["ot"]["spaces"]:
             for v in ACTIONS:
-                for s in SEEDS:
-                    g, M = E.action_embedding(cfg, adata, splits, sp, s, v)
-                    yield f"{v}_{E.SPACE_SHORT[sp]}", sp, s, g, M
+                for s in cfg["eval"]["seeds"]:
+                    g, M = action_embedding(cfg, adata, splits, sp, s, v)
+                    yield f"{v}_{SPACE_SHORT[sp]}", sp, s, g, M
 
     spread, overlap = [], []
     for method, space, seed, genes, M in embeddings():

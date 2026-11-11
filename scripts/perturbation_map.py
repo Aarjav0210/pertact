@@ -7,10 +7,9 @@ Writes results/perturbation_map.json (used by the Data tab of the project site).
 from collections import Counter
 
 import anndata as ad
-import numpy as np
 
 from pertact.config import load_config, path, read_json, write_json
-from pertact.data import CONTROL, condition_genes
+from pertact.data import CONTROL, cell_labels, condition_genes
 
 EXAMPLE_CELLS = ["AGACGTTGTCTAGCGC", "CAGTAACCAGCCTTGG", "CCTTCCCTCCGTCATC", "AACTCAGAGACTGGGT"]
 SNIPPET_GENES = ["KLF1", "SET", "CEBPE", "HBG2", "HBZ", "GATA1"]
@@ -20,13 +19,14 @@ MEAN_GENES = ["KLF1", "SET", "CEBPE", "RUNX1T1", "HBG2", "HBZ", "GATA1"]
 
 
 def main():
+    """Collect the design, the check of each guide on its own gene, example cells and condition averages into
+    results/perturbation_map.json."""
     cfg = load_config()
     adata = ad.read_h5ad(path(cfg, "processed_h5ad"))
     splits = read_json(path(cfg, "splits"))
     qc = read_json(path(cfg, "qc_stats"))
     obs = adata.obs
-    cond = obs["condition"].astype(str).to_numpy()
-    split = obs["split"].astype(str).to_numpy()
+    cond, _, split = cell_labels(obs, cfg["data"]["batch_key"])
     vidx = {g: i for i, g in enumerate(adata.var_names)}
     t2v = dict(adata.uns["target_to_var"])
 
