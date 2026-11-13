@@ -10,6 +10,7 @@ data/
 models/
 results/predictions/
 results/week2_decoder/predictions/
+results/week3_decoder/predictions/
 embeddings/genept_all_genes.npz
 
 # Progress site and its standalone copy: kept on disk only

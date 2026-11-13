@@ -123,7 +123,8 @@ P(f'''
         [mono("actions.py"), nlines("src/pertact/actions.py"), "Sets of action vectors: storage, the mean shift and the two rescalings", '<span class="mono">mean_shift_actions</span>'],
         [mono("infonce.py"), nlines("src/pertact/infonce.py"), "Trains the action vectors with the contrastive loss; temperature and anchor grids", '<span class="mono">infonce_loss</span>, <span class="mono">train_actions</span>'],
         [mono("retrieval.py"), nlines("src/pertact/retrieval.py"), "The forward and reverse tests of any set of action vectors", '<span class="mono">instance_retrieval</span>, <span class="mono">identification</span>'],
-        [mono("decoder_test.py"), nlines("src/pertact/decoder_test.py"), "The Week 2 decoder test: frozen action vectors through the Week 1 decoders", '<span class="mono">action_smoke</span>'],
+        [mono("decoder_test.py"), nlines("src/pertact/decoder_test.py"), "The decoder test: frozen action vectors through the Week 1 decoders, on validation singles or also on the test doubles", '<span class="mono">action_smoke</span>'],
+        [mono("doubles.py"), nlines("src/pertact/doubles.py"), "Week 3: the sum of two action vectors scored on the test doubles, in the state space", '<span class="mono">score_conditions</span>'],
         [mono("scripts/") + f" ({len(SCRIPTS)} files)", nlines(*SCRIPTS), "Report tables, the perturbation map, Week 2 diagnostics and summaries, the OT pair plot, the output check, and the builders of this site", ""],
         [mono("tests/") + f" ({len(TESTS)} files)", nlines(*TESTS), "Fast tests on small synthetic inputs", ""]])}
   </div>''')

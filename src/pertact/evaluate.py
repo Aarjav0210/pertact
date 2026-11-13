@@ -9,6 +9,8 @@
     python -I -m pertact.evaluate actions --variants ... [--spaces ...] [--tag t]  # Week 2 smoke test: frozen action
                          # vectors through both decoders, validation singles only (no test doubles);
                          # results/week2_decoder/smoke__<tag>.csv
+    python -I -m pertact.evaluate actions --doubles --variants ... [--tag t]       # Week 3: the same decoders also
+                         # scored on the 127 test doubles; results/week3_decoder/doubles__<tag>.csv
 
 The metrics are defined in metrics.py; the tables for the report are printed by scripts/report_tables.py.
 """
@@ -34,6 +36,7 @@ def main():
     ap.add_argument("--spaces", nargs="*", default=None, help="actions: state spaces of the action vectors")
     ap.add_argument("--references", nargs="*", default=["onehot", "pca_loadings"], help="actions: Week 1 embeddings")
     ap.add_argument("--tag", default="main", help="actions: output file tag")
+    ap.add_argument("--doubles", action="store_true", help="actions: also score the 127 test doubles (results/week3_decoder/)")
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
     cfg = load_config(a.config)
@@ -53,7 +56,7 @@ def main():
     elif a.what == "actions":
         action_smoke(cfg, a.variants or ["infonce_scaled_per_action"], a.spaces or cfg["ot"]["spaces"],
                      a.decoders or cfg["eval"]["decoders"], a.seeds if a.seeds is not None else cfg["eval"]["seeds"],
-                     references=a.references, tag=a.tag)
+                     references=a.references, tag=a.tag, doubles=a.doubles)
     else:
         run(cfg, a.methods or cfg["eval"]["methods"], a.decoders or cfg["eval"]["decoders"],
             a.seeds if a.seeds is not None else cfg["eval"]["seeds"])

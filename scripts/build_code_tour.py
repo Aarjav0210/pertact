@@ -163,9 +163,16 @@ GROUPS = [
              run=["python -I -m pertact.retrieval"], reads="states, OT pairs (per-perturbation and pooled), action vectors",
              writes="`results/week2_retrieval.csv`, `week2_identification_by_pert.csv`, `week2_length_ratio.csv`, `week2_action_scales.csv`, `week2_effect_strength.csv`",
              cells="Tests on VA cells, and on TR cells for comparison. No TE cell."),
-        dict(path="src/pertact/decoder_test.py", role="The Week 2 decoder test: frozen action vectors as the input of the Week 1 decoders, scored on validation cells only.",
-             run=["python -I -m pertact.evaluate actions --variants ... --tag ..."], writes="`results/week2_decoder/`",
-             cells="Trains on TR, early stopping and scores on VA. Built without the test split."),
+        dict(path="src/pertact/decoder_test.py", role="The decoder test: frozen action vectors as the input of the Week 1 decoders. Scored on validation cells only, or with `--doubles` also on the test doubles.",
+             run=["python -I -m pertact.evaluate actions --variants ... --tag ...", "python -I -m pertact.evaluate actions --doubles --variants ... --tag ..."],
+             writes="`results/week2_decoder/`; with `--doubles`, `results/week3_decoder/`",
+             cells="Trains on TR, early stopping on VA, scores VA. Built without the test split unless `--doubles` is given; then TE cells are scored too, and only scored."),
+    ]),
+    ("Week 3: adding two action vectors, scored on the test doubles", "One file. It fits nothing: it takes the Week 2 action vectors as they are and scores f(a) + f(b) against the real doubles, in the state space.", [
+        dict(path="src/pertact/doubles.py", role="Scores every Week 2 set of action vectors on the 127 test doubles: how close the sum of two vectors lands to the double's centre, and whether the double can be named from a cell.",
+             run=["python -I -m pertact.doubles --split val", "python -I -m pertact.doubles"], reads="states, `splits.json`, OT pairs of TR cells, action vectors",
+             writes="`results/week3_doubles.csv`, `week3_doubles_by_pair.csv`",
+             cells="Scores TE cells: the doubles and the test controls. With `--split val`, VA cells instead. Fits nothing on either."),
     ]),
     ("Analysis scripts", "Small scripts that turn saved results into tables, diagnostics and one figure. None of them trains anything.", [
         dict(path="scripts/perturbation_map.py", role="Describes the experiment's design for the site's Data tab: which singles and doubles exist, example cells, and a few condition averages.",
@@ -178,6 +185,9 @@ GROUPS = [
         dict(path="scripts/week2_decoder_summary.py", role="Summarises the Week 2 decoder test by seed and by effect-strength third.",
              run=["python -I scripts/week2_decoder_summary.py"], reads="`results/week2_decoder/smoke_per_perturbation__*.csv`",
              writes="`results/week2_decoder/summary.csv`, `paired_length_vs_unit.csv`", cells="none (reads saved VA scores)"),
+        dict(path="scripts/week3_week1_in_state_space.py", role="Scores the saved Week 1 predictions of the test doubles with the Week 3 state-space scores, by projecting them into PCA-50. Not like for like: these rows have a trained decoder, the action vectors were added directly.",
+             run=["python -I scripts/week3_week1_in_state_space.py"], reads="`results/predictions/`, `results/week3_doubles_by_pair.csv`, `models/pca_g.npz`",
+             writes="`results/week3_doubles_week1_embeddings.csv`, `week3_doubles_week1_embeddings_by_pair.csv`", cells="TE cells: the doubles and the test controls, to score saved predictions. Fits nothing."),
         dict(path="scripts/plot_ot_pairs.py", role="Draws the OT pairs of a few perturbations in a 2-D slice of a state space, next to random pairs.",
              run=["python -I scripts/plot_ot_pairs.py"], writes="`figures/ot_pairs_X_pca_g.png`, `results/ot/pair_plot_stats_X_pca_g.csv`", cells="TR cells of one gem group"),
     ]),
@@ -186,6 +196,7 @@ GROUPS = [
              run=["python -I scripts/check_outputs.py", "python -I scripts/check_outputs.py --steps ot"], cells="TR and VA cells; TE cells only where the rerun step scores them"),
         dict(path="tests/test_data_and_splits.py", role="Guide parsing, perturbation labels and the split, on tiny hand-made inputs.", run=["python -I -m pytest"], cells="none (synthetic)"),
         dict(path="tests/test_ot_and_tests.py", role="The OT pairing, the start state and the rank used by both tests, on synthetic clouds.", cells="none (synthetic)"),
+        dict(path="tests/test_doubles.py", role="The scores of the doubles test, on synthetic cells with one additive and one non-additive double.", cells="none (synthetic)"),
         dict(path="tests/test_models_and_scores.py", role="The embedding table, two structural properties of the decoder, the InfoNCE loss and the scoring helpers.", cells="none (synthetic)"),
     ]),
     ("Site builders and packaging", "Tooling for this notebook. None of it affects a result.", [
@@ -346,6 +357,7 @@ N["src/pertact/actions.py"] = {
     "calibrate_scale": "One number for a whole set of action vectors: the multiplier that brings control + vector closest to the partner, by least squares on training pairs. This is the 0.42 used for InfoNCE.",
     "per_action_scale": "The same least squares, gene by gene. The result is the projection of the mean shift onto the learned direction.",
     "length_ratio": "Length of each learned vector divided by the length of that gene's mean shift.",
+    "effect_tiers": "Each gene's effect strength (the length of its training mean shift, in units of the typical distance between two training cells) and its third: weak, medium or strong. Used by the Week 2 tests and to label the doubles.",
     "length_table": "For each gene and each set: its length relative to the mean shift, and the cosine between the two.",
 }
 N["src/pertact/infonce.py"] = {
@@ -369,10 +381,23 @@ N["src/pertact/retrieval.py"] = {
     "main": "Runs the evaluation.",
     "@main": "Runs `main`.",
 }
+N["src/pertact/doubles.py"] = {
+    "@head": "The docstring defines the two scores and says which lists were fixed before the first run on the doubles. `RULES` names the three ways a condition's vectors are combined: the sum, the stronger gene alone, and the better gene alone.",
+    "real_shifts": "What really happened to each condition: the centre of its cells minus the centre of the controls of the same split, gem group by gem group, averaged with the condition's cell counts. Also `noise_sq`, the squared miss a perfect prediction would still have because both centres come from a finite number of cells.",
+    "centre_scores": "Compares a predicted shift with the measured one: squared miss, the miss as a fraction of the squared real length (1 = no better than adding nothing), cosine for direction and length ratio for length.",
+    "all_combinations": "Every candidate a cell could have received: no perturbation, each of the 105 genes alone, and each of the 5,460 pairs.",
+    "compose": "Turns candidates into vectors: each row is the sum of its genes' action vectors, and zero for no gene.",
+    "rank_true": "For every query, the rank of the right candidate when candidates are ordered by how close start + vector lands. The same formula as the Week 2 reverse test, in chunks so 5,566 candidates fit in memory.",
+    "_rank_summary": "Top-1, top-5 and mean reciprocal rank.",
+    "score_conditions": "The whole test for one state space, on plain arrays. For every action set it scores the sum, the stronger gene alone and the better gene alone against each condition's real shift, then names each condition from every cell and from its centre, for every candidate list. The last block counts in how many conditions a set beats the mean shift and its own single vectors. || The better-gene-alone reference looks at the double to choose the gene, so it is an upper bound for using one vector, not something that could be run blind.",
+    "run": "Loads the data, builds the same action sets as the Week 2 tests, and scores them on the test doubles, or on validation singles with one gene per condition. || This is the only place in the package where the Week 2 vectors meet test cells. Nothing is fitted here, but the scores must not be used to choose a variant that is then reported on the same doubles.",
+    "main": "Writes the two tables for the test doubles. With `--split val` it writes nothing and compares its naming scores with the saved Week 2 reverse test, which they must equal.",
+    "@main": "Runs `main`.",
+}
 N["src/pertact/decoder_test.py"] = {
     "@head": "The short names of the two state spaces as used in file names, and the action-vector variants the test accepts.",
     "action_embedding": "Returns one Week 2 action-vector set as a gene-by-vector table: InfoNCE as trained, rescaled globally or per gene, anchored, or the mean shift. A `_unit` suffix divides every vector by its own length, keeping only its direction.",
-    "action_smoke": "The decoder test from Week 2. Each action-vector set is frozen and fed to both decoders, scored on validation cells only. The runner is built without the test set.",
+    "action_smoke": "The decoder test. Each action-vector set is frozen and fed to both decoders. By default it is scored on validation cells only, and the runner is built without the test set. With `doubles=True` the same decoders also predict the 127 test doubles as the sum of the two genes' vectors, both sets of cells are scored, and the files go to `results/week3_decoder/`. || With `doubles=True` this reads test cells. The decoders are still trained on training cells and stopped on validation cells, so nothing is fitted to a double, but the list of variants to run must be fixed before looking at the scores.",
 }
 N["scripts/perturbation_map.py"] = {
     "@head": "Fixed example cells and genes for the Data tab's tables.",
@@ -396,6 +421,12 @@ N["scripts/week2_direction_diagnostics.py"] = {
 N["scripts/week2_decoder_summary.py"] = {
     "@head": "Which sets are compared with fitted lengths against unit length.",
     "main": "Averages the decoder test's scores by seed, overall and by effect-strength third, and counts in how many seed-paired comparisons the weak third improves at unit length.",
+    "@main": "Runs `main`.",
+}
+N["scripts/week3_week1_in_state_space.py"] = {
+    "@head": "The docstring says why this works only in PCA-50 (it is a linear map of expression, scVI is not) and why the comparison is not like for like.",
+    "score_shifts": "Scores one method's predicted shifts for the 127 doubles with the functions of `pertact.doubles`: miss, cosine and length for every double, and how often the right double is named from a cell and from its centre.",
+    "main": "Projects the additive expression baseline and each saved Week 1 prediction of a double into PCA-50, subtracts the control centre that double is measured from, scores the result, and counts in how many doubles each run lands closer than the summed mean shifts. || It first checks the projection on test controls: their mean profile must land on the mean of their states. || STRING lacks vectors for 12 genes, so the summary also has a row over the 108 doubles it covers.",
     "@main": "Runs `main`.",
 }
 N["scripts/plot_ot_pairs.py"] = {
@@ -514,19 +545,21 @@ def txt(label, col, row):
 
 P = "src/pertact/"
 PIPELINE = dict(cols=6, title="The pipeline, file by file", nodes=[
-    txt("Week 1", 0, 0), txt("Week 2", 0, 2),
+    txt("Week 1", 0, 0), txt("Week 2", 0, 2), txt("Week 3", 0, 3),
     mod(P + "data.py", 0, 1, "1 · filter cells", "#1"), mod(P + "splits.py", 1, 1, "assign the sets"),
     mod(P + "data.py", 2, 1, "2 · choose genes", "#2"), mod(P + "encoders.py", 3, 1, "cell states"),
     mod(P + "embeddings.py", 3, 0, "gene embeddings"), mod(P + "decoders.py", 4, 0, "the test model"),
     mod(P + "runs.py", 5, 0, "train and score"),
     mod(P + "ot.py", 3, 2, "pair the cells"), mod(P + "infonce.py", 4, 2, "action vectors"),
-    mod(P + "retrieval.py", 5, 2, "the two tests"), mod(P + "decoder_test.py", 5, 1, "vectors in decoder")],
+    mod(P + "retrieval.py", 5, 2, "the two tests"), mod(P + "decoder_test.py", 5, 1, "vectors in decoder"),
+    mod(P + "doubles.py", 5, 3, "sums on the doubles")],
     edges=[("mod:src/pertact/data.py#1", "mod:src/pertact/splits.py"), ("mod:src/pertact/splits.py", "mod:src/pertact/data.py#2"),
            ("mod:src/pertact/data.py#2", "mod:src/pertact/encoders.py"), ("mod:src/pertact/data.py#2", "mod:src/pertact/embeddings.py"),
            ("mod:src/pertact/embeddings.py", "mod:src/pertact/decoders.py"), ("mod:src/pertact/encoders.py", "mod:src/pertact/decoders.py"),
            ("mod:src/pertact/decoders.py", "mod:src/pertact/runs.py"), ("mod:src/pertact/encoders.py", "mod:src/pertact/ot.py"),
            ("mod:src/pertact/ot.py", "mod:src/pertact/infonce.py"), ("mod:src/pertact/infonce.py", "mod:src/pertact/retrieval.py"),
-           ("mod:src/pertact/infonce.py", "mod:src/pertact/decoder_test.py"), ("mod:src/pertact/decoder_test.py", "mod:src/pertact/runs.py")])
+           ("mod:src/pertact/infonce.py", "mod:src/pertact/decoder_test.py"), ("mod:src/pertact/decoder_test.py", "mod:src/pertact/runs.py"),
+           ("mod:src/pertact/infonce.py", "mod:src/pertact/doubles.py")])
 TOOLING = dict(cols=5, title="How this notebook is built", nodes=[
     mod("scripts/walkthrough_figs.py", 0, 1, "draws the SVG figures"), mod("scripts/build_site.py", 1, 0, "Week 1 scores as JSON"),
     mod("scripts/build_walkthrough.py", 1, 1, "the Walkthrough tab"), mod("scripts/build_code_tour.py", 1, 2, "this tab"),
@@ -611,7 +644,7 @@ MAPS[P + "evaluate.py"] = dict(cols=4, nodes=[
     cmd("evaluate run", 0, 3), fn("run", 1, 3, "every embedding, decoder, seed", rel=P + "runs.py"),
     fn("Runner", 2, 3, "train or reload, predict, score", rel=P + "runs.py"), fn("EvalRef", 3, 3, "fixed references and metrics", rel=P + "metrics.py"),
     cmd("evaluate compose", 0, 4), fn("compose", 1, 4, "doubles, one gene at a time", rel=P + "runs.py"), out("results/week1.csv", 3, 4, "one row per metric"),
-    cmd("evaluate actions", 0, 5), fn("action_smoke", 1, 5, "Week 2 decoder test, VA only", rel=P + "decoder_test.py"),
+    cmd("evaluate actions", 0, 5), fn("action_smoke", 1, 5, "decoder test, VA or doubles", rel=P + "decoder_test.py"),
     fn("action_embedding", 2, 5, "one set of action vectors", rel=P + "decoder_test.py"),
     cmd("evaluate rescore", 0, 6), fn("rescore", 1, 6, "metrics from saved predictions", rel=P + "runs.py")],
     edges=[("cmd:evaluate de", "compute_de"), ("compute_de", "file:de_genes.json"), ("cmd:evaluate baselines", "run_baselines"),
@@ -657,10 +690,20 @@ MAPS[P + "retrieval.py"] = dict(cols=4, nodes=[
     edges=[("cmd:retrieval", "run_tests"), ("run_tests", "build_action_sets"), ("build_action_sets", "mean_shift_actions"),
            ("run_tests", "instance_retrieval"), ("run_tests", "identification"), ("run_tests", "length_table"),
            ("instance_retrieval", "_avg_rank"), ("identification", "_avg_rank"), ("length_table", "file:results/week2_*.csv")])
+MAPS[P + "doubles.py"] = dict(cols=4, nodes=[
+    cmd("doubles", 0, 1), fn("run", 1, 1, "both state spaces"),
+    fn("build_action_sets", 2, 0, "the same sets as Week 2", rel=P + "retrieval.py"), fn("effect_tiers", 3, 0, "weak, medium, strong", rel=P + "actions.py"),
+    fn("score_conditions", 2, 1, "every set, both scores"), fn("real_shifts", 3, 1, "what really happened"),
+    fn("all_combinations", 1, 2, "the 5,566 candidates"), fn("compose", 2, 2, "sum the genes' vectors"), fn("centre_scores", 3, 2, "miss, cosine, length"),
+    fn("rank_true", 2, 3, "name the double"), fn("_avg_rank", 3, 3, "rank of the right answer", rel=P + "retrieval.py"),
+    out("results/week3_doubles*.csv", 1, 3, "per set and per double")],
+    edges=[("cmd:doubles", "run"), ("run", "build_action_sets"), ("run", "effect_tiers"), ("run", "score_conditions"), ("run", "all_combinations"),
+           ("score_conditions", "real_shifts"), ("score_conditions", "centre_scores"), ("score_conditions", "compose"),
+           ("score_conditions", "rank_true"), ("rank_true", "_avg_rank"), ("run", "file:results/week3_doubles*.csv")])
 MAPS[P + "decoder_test.py"] = dict(cols=4, nodes=[
     cmd("evaluate actions", 0, 0, rel=P + "evaluate.py"), fn("action_smoke", 1, 0, "every variant, both decoders"),
     fn("action_embedding", 2, 0, "one set of action vectors"), fn("load_actions", 3, 0, "the saved vectors", rel=P + "actions.py"),
-    fn("Runner", 2, 1, "built for validation only", rel=P + "runs.py"), out("week2_decoder/smoke__*.csv", 3, 1, "scores of every run")],
+    fn("Runner", 2, 1, "validation, or with doubles", rel=P + "runs.py"), out("week2_decoder/smoke__*.csv", 3, 1, "scores of every run")],
     edges=[("cmd:evaluate actions", "action_smoke"), ("action_smoke", "action_embedding"), ("action_embedding", "load_actions"),
            ("action_smoke", "Runner"), ("Runner", "file:week2_decoder/smoke__*.csv")])
 ROLE = {f["path"]: f["role"] for _, _, fs in GROUPS for f in fs}
@@ -901,7 +944,7 @@ def build():
     <h2>Every file, in the order it runs</h2>
     <p class="lede">This tab shows all {total:,} lines of code and settings in the repository: {len(listed)} files, cut into {nseg} functions and blocks. Each block has a note saying what it does, then its complete source with the real line numbers.</p>
     <ul class="clean">
-      <li><b>Read it in order.</b> The six parts follow the pipeline: foundations, Week 1, Week 2, analysis scripts, checks and tests, then the tooling for this notebook.</li>
+      <li><b>Read it in order.</b> The seven parts follow the pipeline: foundations, Week 1, Week 2, Week 3, analysis scripts, checks and tests, then the tooling for this notebook.</li>
       <li><b>"Cells it reads"</b> says which cells a file touches: TR is training cells, VA is validation cells, TE is test cells (the double perturbations).</li>
       <li><b>Maps are clickable.</b> Point at a box to see what it does and what it connects to, click it to open its code, or press Next to walk through a file in run order. An orange dot marks a box with a review note, and a dashed box is a function that lives in another file.</li>
       <li><b>A "Review" tag</b> marks something I would raise in a code review. All of them are collected in the list below.</li>
