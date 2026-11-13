@@ -1,0 +1,44 @@
+20:02:51 retrieval INFO X_pca_g seed 0: per-action scales c_a median 0.379 (range 0.059 to 1.058)
+20:02:51 retrieval INFO X_pca_g seed 0: InfoNCE length calibration alpha = 0.426 (fitted on training pairs)
+20:02:51 retrieval INFO X_pca_g seed 0: anchored InfoNCE, least-squares alpha would be 0.871
+20:02:51 retrieval INFO X_pca_g seed 1: per-action scales c_a median 0.386 (range 0.054 to 1.073)
+20:02:51 retrieval INFO X_pca_g seed 1: InfoNCE length calibration alpha = 0.431 (fitted on training pairs)
+20:02:51 retrieval INFO X_pca_g seed 1: anchored InfoNCE, least-squares alpha would be 0.895
+20:02:51 retrieval INFO X_pca_g seed 2: per-action scales c_a median 0.393 (range 0.051 to 1.052)
+20:02:51 retrieval INFO X_pca_g seed 2: InfoNCE length calibration alpha = 0.423 (fitted on training pairs)
+20:02:51 retrieval INFO X_pca_g seed 2: anchored InfoNCE, least-squares alpha would be 0.876
+20:03:09 doubles INFO X_pca_g, test, summed vectors, mean over seeds:
+                           median_miss_ratio  median_cos  median_len_ratio  cell_top1__doubles  cell_top1__all_combinations
+actions                                                                                                                    
+mean_shift                             0.139       0.959             1.076               0.165                        0.039
+zero                                   1.000         NaN             0.000               0.000                        0.000
+shuffled_mean_shift                    0.998       0.560             1.077               0.007                        0.000
+infonce                                1.926       0.728             1.933               0.132                        0.007
+infonce_calibrated                     0.525       0.728             0.825               0.196                        0.040
+infonce_scaled_per_action              0.483       0.770             0.855               0.192                        0.041
+infonce_dir_meanshift_len              0.549       0.766             1.052               0.194                        0.034
+meanshift_dir_infonce_len              1.336       0.946             2.063               0.119                        0.009
+infonce_anchor                         0.253       0.927             1.199               0.166                        0.031
+20:03:09 retrieval INFO X_scvi30 seed 0: per-action scales c_a median 0.348 (range 0.041 to 0.887)
+20:03:09 retrieval INFO X_scvi30 seed 0: InfoNCE length calibration alpha = 0.424 (fitted on training pairs)
+20:03:09 retrieval INFO X_scvi30 seed 0: anchored InfoNCE, least-squares alpha would be 0.805
+20:03:09 retrieval INFO X_scvi30 seed 1: per-action scales c_a median 0.347 (range 0.041 to 0.884)
+20:03:09 retrieval INFO X_scvi30 seed 1: InfoNCE length calibration alpha = 0.415 (fitted on training pairs)
+20:03:09 retrieval INFO X_scvi30 seed 1: anchored InfoNCE, least-squares alpha would be 0.800
+20:03:09 retrieval INFO X_scvi30 seed 2: per-action scales c_a median 0.339 (range 0.041 to 0.939)
+20:03:09 retrieval INFO X_scvi30 seed 2: InfoNCE length calibration alpha = 0.419 (fitted on training pairs)
+20:03:09 retrieval INFO X_scvi30 seed 2: anchored InfoNCE, least-squares alpha would be 0.811
+20:03:27 doubles INFO X_scvi30, test, summed vectors, mean over seeds:
+                           median_miss_ratio  median_cos  median_len_ratio  cell_top1__doubles  cell_top1__all_combinations
+actions                                                                                                                    
+mean_shift                             0.169       0.942             1.112               0.212                        0.035
+zero                                   1.000         NaN             0.000               0.000                        0.000
+shuffled_mean_shift                    1.404       0.332             1.107               0.006                        0.000
+infonce                                2.700       0.761             2.334               0.112                        0.014
+infonce_calibrated                     0.468       0.761             0.978               0.201                        0.046
+infonce_scaled_per_action              0.438       0.815             0.980               0.207                        0.036
+infonce_dir_meanshift_len              0.491       0.808             1.067               0.208                        0.034
+meanshift_dir_infonce_len              2.499       0.924             2.456               0.106                        0.007
+infonce_anchor                         0.460       0.902             1.393               0.179                        0.022
+20:03:27 doubles INFO wrote /Users/aarjavjain/Desktop/Dev/perturb-rl/results/week3_doubles.csv and /Users/aarjavjain/Desktop/Dev/perturb-rl/results/week3_doubles_by_pair.csv
+.venv/bin/python -I -m pertact.doubles  194.30s user 35.44s system 509% cpu 45.064 total

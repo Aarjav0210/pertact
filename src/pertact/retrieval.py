@@ -25,11 +25,11 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from .actions import (actions_path, calibrate_scale, length_table, load_actions, mean_shift_actions,
+from .actions import (actions_path, calibrate_scale, effect_tiers, length_table, load_actions, mean_shift_actions,
                       per_action_scale)
 from .config import get_logger, load_config, path
 from .data import CONTROL, cell_labels
-from .encoders import load_all, scale_D0, states
+from .encoders import load_all, states
 from .ot import load_pairs, start_states
 
 log = get_logger("retrieval")
@@ -149,10 +149,7 @@ def run_tests(cfg):
         ms = mean_shift_actions(cfg, adata, space)
         sets, scales = build_action_sets(cfg, adata, space, genes, ms)
         scale_rows += scales
-        D0 = scale_D0(states(adata, space)[(adata.obs["split"] == "train").to_numpy()])
-        strength = {g: float(np.linalg.norm(v) / np.sqrt(D0)) for g, v in ms.items()}
-        cuts = np.quantile(list(strength.values()), [1 / 3, 2 / 3])
-        tier = {g: ("weak" if s <= cuts[0] else "medium" if s <= cuts[1] else "strong") for g, s in strength.items()}
+        strength, tier = effect_tiers(adata, space, ms)
         strength_rows += [{"space": space, "gene": g, "strength": s, "tier": tier[g]} for g, s in strength.items()]
         len_rows.append(length_table({k: v for k, v in sets.items() if k[0] not in ("zero", "shuffled_mean_shift")},
                                      ms, tier, space))

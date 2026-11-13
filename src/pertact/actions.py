@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from .config import path, write_json
-from .encoders import states
+from .encoders import scale_D0, states
 from .ot import load_pairs, start_states
 
 
@@ -69,6 +69,16 @@ def per_action_scale(cfg, adata, space, actions) -> dict[str, float]:
     tot = disp.groupby("cond").sum()
     n = disp.groupby("cond").size()
     return {g: float(actions[g] @ tot.loc[g].to_numpy() / (n[g] * actions[g] @ actions[g])) for g in tot.index if g in actions}
+
+
+def effect_tiers(adata, space, ms) -> tuple[dict[str, float], dict[str, str]]:
+    """Each gene's effect strength (the length of its training mean shift, in units of the typical distance between
+    two training cells) and which third of the genes it falls in: weak, medium or strong."""
+    D0 = scale_D0(states(adata, space)[(adata.obs["split"] == "train").to_numpy()])
+    strength = {g: float(np.linalg.norm(v) / np.sqrt(D0)) for g, v in ms.items()}
+    cuts = np.quantile(list(strength.values()), [1 / 3, 2 / 3])
+    tier = {g: ("weak" if s <= cuts[0] else "medium" if s <= cuts[1] else "strong") for g, s in strength.items()}
+    return strength, tier
 
 
 # --------------------------------------------------------------------------- length against the mean shift
