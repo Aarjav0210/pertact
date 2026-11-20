@@ -16,6 +16,9 @@ list of action sets, references and scores below was fixed before the first run 
 
     python -I -m pertact.doubles               # results/week3_doubles.csv and week3_doubles_by_pair.csv
     python -I -m pertact.doubles --split val   # the same code on validation singles; prints, writes nothing
+    python -I -m pertact.doubles --split val --variant infonce_cos   # how close another stored set of vectors lands
+                                               # on validation singles; writes results/infonce_cos/landing_validation*.csv
+The test doubles have had their one look (2026-11-11), so --variant is refused without --split val.
 
 The validation run is a check of this code: with one gene per condition, naming the perturbation from the gem-mean
 start is the Week 2 reverse test, and the numbers must equal those in results/week2_retrieval.csv.
@@ -176,9 +179,10 @@ def score_conditions(S, cond, gem, in_split, conditions, sets, ms_len, candidate
     return by_pair, summary
 
 
-def run(cfg, split="test"):
+def run(cfg, split="test", variants=("infonce",)):
     """Score every Week 2 action set in every paired state space: on the test doubles (split "test"), or on the
-    validation singles as a check of the code (split "val"). Returns the per-condition and the summary table."""
+    validation singles as a check of the code (split "val"). Returns the per-condition and the summary table.
+    `variants` are the stored sets of learned vectors to include (see retrieval.build_action_sets)."""
     adata, splits = load_all(cfg)
     genes = sorted(splits["train_singles"])
     cond, gem, cell_split = cell_labels(adata.obs, cfg["data"]["batch_key"])
@@ -192,7 +196,7 @@ def run(cfg, split="test"):
     pairs, sums = [], []
     for space in cfg["ot"]["spaces"]:
         ms = mean_shift_actions(cfg, adata, space)
-        sets, _ = build_action_sets(cfg, adata, space, genes, ms)
+        sets, _ = build_action_sets(cfg, adata, space, genes, ms, variants)
         _, tier = effect_tiers(adata, space, ms)
         by_pair, summary = score_conditions(states(adata, space), cond, gem, cell_split == split, conditions, sets,
                                             {g: float(np.linalg.norm(v)) for g, v in ms.items()}, candidate_sets)
@@ -212,13 +216,22 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", choices=["test", "val"], default="test")
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
+    ap.add_argument("--variant", default=None, help="another stored set of learned vectors, validation singles only")
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
+    if a.variant and a.split != "val":
+        ap.error("--variant needs --split val: the test doubles are not scored again for new variants")
     cfg = load_config(a.config)
     if a.spaces:
         cfg["ot"]["spaces"] = a.spaces
-    by_pair, summary = run(cfg, a.split)
-    if a.split == "test":
+    by_pair, summary = run(cfg, a.split, ("infonce", a.variant) if a.variant else ("infonce",))
+    if a.variant:
+        out = path(cfg, "results_dir") / a.variant
+        out.mkdir(parents=True, exist_ok=True)
+        summary.to_csv(out / "landing_validation.csv", index=False)
+        by_pair.to_csv(out / "landing_validation_by_gene.csv", index=False)
+        log.info("wrote %s and %s", out / "landing_validation.csv", out / "landing_validation_by_gene.csv")
+    elif a.split == "test":
         out = path(cfg, "results_dir")
         summary.to_csv(out / "week3_doubles.csv", index=False)
         by_pair.to_csv(out / "week3_doubles_by_pair.csv", index=False)

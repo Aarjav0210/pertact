@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 
 from pertact.decoders import LatentAdditive, PertEmbedding, SplitData
-from pertact.infonce import infonce_loss
+from pertact.infonce import cosine_infonce_loss, infonce_loss
 from pertact.metrics import pearson, spearman_brown_ceiling
 from pertact.runs import fingerprint, replace_runs
 
@@ -52,6 +52,21 @@ def test_infonce_loss_prefers_the_true_shift_and_the_anchor_only_adds():
     assert right < zero
     assert infonce_loss(torch.zeros(2, 2), ctrl, pert, a, 0.1, 10.0, rho=0.5) > zero
     assert torch.isclose(infonce_loss(shifts, ctrl, pert, a, 0.1, 10.0, rho=0.5), right)   # the anchor is zero at the partner
+
+
+def test_cosine_loss_ignores_length_and_only_turns_the_vectors():
+    torch.manual_seed(0)
+    shifts = torch.tensor([[6.0, 0.0], [0.0, 6.0]])
+    a = torch.tensor([0, 0, 1, 1])
+    ctrl = torch.randn(4, 2)
+    pert = ctrl + shifts[a] + 0.1 * torch.randn(4, 2)
+    F = shifts.clone().requires_grad_()
+    right = cosine_infonce_loss(F, ctrl, pert, a, 0.1)
+    assert torch.isclose(right, cosine_infonce_loss(5 * F, ctrl, pert, a, 0.1))            # the length of f has no effect
+    assert right < cosine_infonce_loss(torch.flip(shifts, [0]), ctrl, pert, a, 0.1)        # the wrong directions score worse
+    assert cosine_infonce_loss(F, ctrl, pert, a, 0.05) < right                             # a lower temperature sharpens a right answer
+    right.backward()
+    assert torch.allclose((F.grad * F).sum(1), torch.zeros(2), atol=1e-5)                  # the gradient is at right angles to f
 
 
 def test_pearson_and_the_noise_ceiling_formula():

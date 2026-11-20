@@ -18,11 +18,18 @@ The InfoNCE positive logit already pulls q_n toward k_n with weight 1/tau (in D0
 weight as a fraction of that built-in pull (rho = 0.1: the positive pull is 10% stronger). rho is the smallest value
 on a grid that brings the median length ratio ||f(a)|| / ||mean OT shift|| on training pairs into [0.8, 1.25].
 
+Cosine variant (Week 4, CLIP-style). The squared-distance score lets the length of f(a) act as a temperature, which
+is where the overshoot comes from. Here only directions are compared:
+    L_nm = cos( f(a_n), s(x_pert_m) - s(x_ctrl_n) ) / tau      action against the displacement control n -> cell m
+with the same symmetric cross-entropy. f(a) cannot use its length, so it is stored at unit length, and tau is a
+parameter learned with the vectors, as in CLIP (it starts at cosine.tau_init and is kept above cosine.tau_min).
+
     python -I -m pertact.infonce tune      # temperature grid on validation retrieval, seed 0, each space
     python -I -m pertact.infonce train     # every space × seed with the chosen temperature
     python -I -m pertact.infonce anchor    # rho grid (seed 0, training-pair length ratio), then every space × seed
+    python -I -m pertact.infonce cosine    # the cosine, unit-length variant: every space × seed
 Writes embeddings/infonce__<space>__s<seed>.npz (emb, genes) and results/infonce/ histories; the anchored actions go
-to embeddings/infonce_anchor__<space>__s<seed>.npz.
+to embeddings/infonce_anchor__<space>__s<seed>.npz and the cosine ones to embeddings/infonce_cos__<space>__s<seed>.npz.
 """
 from __future__ import annotations
 
@@ -80,10 +87,24 @@ def infonce_loss(F, s_ctrl, s_pert, a, tau, D0, rho=0.0):
     return loss
 
 
-def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0):
+def cosine_infonce_loss(F, s_ctrl, s_pert, a, tau):
+    """The cosine loss of one batch (CLIP-style): each action vector against the displacement from its own control
+    to every perturbed cell of the batch, both at unit length, symmetric over rows and columns. The length of F
+    has no effect, so only the temperature tau sets how sharp the contrast is."""
+    f = torch.nn.functional.normalize(F[a], dim=1)
+    disp = torch.nn.functional.normalize(s_pert[None, :, :] - s_ctrl[:, None, :], dim=2)   # [n, m]: control n -> cell m
+    L = (disp * f[:, None, :]).sum(2) / tau
+    y = torch.arange(len(a))
+    return 0.5 * (torch.nn.functional.cross_entropy(L, y) + torch.nn.functional.cross_entropy(L.T, y))
+
+
+def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, score="distance"):
     """Learn one action vector per gene in one state space. The vectors start at zero and are the only thing trained.
     Training stops when the loss on fixed validation batches has not improved for `patience` checks; the best
-    vectors are returned with their genes, the loss history and a summary."""
+    vectors are returned with their genes, the loss history and a summary.
+
+    With score="cosine" the cosine loss is used instead: the vectors start from random directions (zero has no
+    direction), `tau` is the starting temperature and is learned with them, and the vectors come back at unit length."""
     c = cfg["infonce"]
     seed_everything(seed)
     rng = np.random.default_rng(seed)
@@ -94,28 +115,46 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0):
     D0 = scale_D0(S[(adata.obs["split"] == "train").to_numpy()], seed)
     vrng = np.random.default_rng(VAL_SEED_OFFSET + seed)
     val_batches = [va.batch(vrng, c["P"], c["K"]) for _ in range(c["n_val_batches"])]
-    F = torch.zeros(len(genes), S.shape[1], requires_grad=True)
-    opt = torch.optim.Adam([F], lr=c["lr"])
-    best, best_F, bad, hist = np.inf, None, 0, []
+    cosine = score == "cosine"
+    if cosine:
+        cc = c["cosine"]
+        F = torch.randn(len(genes), S.shape[1]).requires_grad_()
+        log_tau = torch.tensor(float(np.log(tau)), requires_grad=True)
+        tau_now = lambda: log_tau.exp().clamp(min=cc["tau_min"])
+        batch_loss = lambda sc, sp, a: cosine_infonce_loss(F, sc, sp, a, tau_now())
+        opt = torch.optim.Adam([F, log_tau] if cc["learn_tau"] else [F], lr=c["lr"])
+    else:
+        F = torch.zeros(len(genes), S.shape[1], requires_grad=True)
+        batch_loss = lambda sc, sp, a: infonce_loss(F, sc, sp, a, tau, D0, rho)
+        opt = torch.optim.Adam([F], lr=c["lr"])
+    best, best_F, best_tau, bad, hist = np.inf, None, tau, 0, []
     t0 = time.time()
     for step in range(1, c["max_steps"] + 1):
         sc, sp, a = tr.batch(rng, c["P"], c["K"])
-        loss = infonce_loss(F, sc, sp, a, tau, D0, rho)
+        loss = batch_loss(sc, sp, a)
         opt.zero_grad()
         loss.backward()
         opt.step()
         if step % c["eval_every"] == 0:
             with torch.no_grad():
-                vl = float(np.mean([infonce_loss(F, *b, tau, D0, rho).item() for b in val_batches]))
-            hist.append({"step": step, "train_loss": loss.item(), "val_loss": vl})
+                vl = float(np.mean([batch_loss(*b).item() for b in val_batches]))
+            hist.append({"step": step, "train_loss": loss.item(), "val_loss": vl} | ({"tau": tau_now().item()} if cosine else {}))
             if vl < best - 1e-4:
                 best, best_F, bad = vl, F.detach().clone(), 0
+                best_tau = tau_now().item() if cosine else tau
             else:
                 bad += 1
             if bad >= c["patience"]:
                 break
     if best_F is None:
         raise RuntimeError(f"no validation check ran in {step} steps: max_steps must be at least eval_every ({c['eval_every']})")
+    if cosine:
+        if verbose:
+            log.info("%s seed %d cosine: %d steps, best val loss %.4f (chance %.4f), temperature %.3g -> %.4f, %.0fs", space,
+                     seed, step, best, np.log(c["P"] * c["K"]), tau, best_tau, time.time() - t0)
+        unit = torch.nn.functional.normalize(best_F, dim=1).numpy()
+        return unit, genes, pd.DataFrame(hist), {"steps": step, "best_val_loss": best, "D0": D0, "score": "cosine",
+                                                 "tau_start": tau, "tau_learned": best_tau}
     if verbose:
         log.info("%s seed %d tau %.3g rho %.3g: %d steps, best val loss %.4f (chance %.4f), %.0fs", space, seed, tau,
                  rho, step, best, np.log(c["P"] * c["K"]), time.time() - t0)
@@ -195,10 +234,20 @@ def train_all(cfg):
             save_actions(cfg, space, seed, F, genes, info, hist, best[space])
 
 
+def train_cosine(cfg):
+    """Train the cosine, unit-length action vectors: every state space and seed, saved as "infonce_cos" with the
+    temperature each run learned."""
+    adata, splits = load_all(cfg)
+    for space in cfg["ot"]["spaces"]:
+        for seed in cfg["eval"]["seeds"]:
+            F, genes, hist, info = train_actions(cfg, adata, splits, space, seed, cfg["infonce"]["cosine"]["tau_init"], score="cosine")
+            save_actions(cfg, space, seed, F, genes, info, hist, info["tau_learned"], name="infonce_cos")
+
+
 def main():
-    """Dispatch tune, train and anchor."""
+    """Dispatch tune, train, anchor and cosine."""
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["tune", "train", "anchor"])
+    ap.add_argument("what", choices=["tune", "train", "anchor", "cosine"])
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
     ap.add_argument("--max-steps", type=int, default=None, help="override for quick smoke tests")
     ap.add_argument("--config", default=None)
@@ -208,7 +257,7 @@ def main():
         cfg["ot"]["spaces"] = a.spaces
     if a.max_steps:
         cfg["infonce"]["max_steps"] = a.max_steps
-    {"tune": tune, "train": train_all, "anchor": anchor}[a.what](cfg)
+    {"tune": tune, "train": train_all, "anchor": anchor, "cosine": train_cosine}[a.what](cfg)
 
 
 if __name__ == "__main__":

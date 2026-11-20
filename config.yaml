@@ -94,6 +94,12 @@ infonce:
   # of the pull InfoNCE's own positive logit already applies. Smallest rho meeting the target is used.
   anchor_grid: [0.01, 0.03, 0.1, 0.3, 1.0]
   anchor_target: [0.8, 1.25]       # median ||f(a)|| / ||mean OT shift|| on training pairs
+  # Week 4, cosine variant (CLIP-style): unit action vector against the unit displacement control -> perturbed cell.
+  # The temperature starts at tau_init and is learned with the vectors; it is kept above tau_min (CLIP caps 1/tau at 100).
+  cosine:
+    tau_init: 0.07
+    tau_min: 0.01
+    learn_tau: true
 
 decoder:
   state_key: X_pca_g               # frozen control-state embedding fed to enc()

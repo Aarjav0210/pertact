@@ -17,6 +17,9 @@ that swap lengths gene by gene (InfoNCE direction at mean-shift length, mean-shi
 
     python -I -m pertact.retrieval     # results/week2_retrieval.csv, week2_identification_by_pert.csv,
                                        # week2_length_ratio.csv, week2_action_scales.csv
+    python -I -m pertact.retrieval --variant infonce_cos   # the same tests for another stored set of vectors, next
+                                       # to the Week 2 ones, plus both tests scored by direction alone (cosine);
+                                       # writes results/infonce_cos/*.csv and leaves the Week 2 files alone
 """
 from __future__ import annotations
 
@@ -44,9 +47,17 @@ def _avg_rank(d_true, d_all):
     return less + (eq + 1) / 2.0
 
 
-def instance_retrieval(cfg, adata, space, split, actions, max_queries=None, seed=0, chunk=1024) -> dict:
+def _unit(M):
+    """Rows of M at unit length; a zero row stays zero."""
+    n = np.linalg.norm(M, axis=1, keepdims=True)
+    return M / np.where(n > 0, n, 1.0)
+
+
+def instance_retrieval(cfg, adata, space, split, actions, max_queries=None, seed=0, chunk=1024, score="distance") -> dict:
     """The forward test. For each paired cell the query is its heaviest partner control plus the action vector, and
-    every cell of the split is ranked by distance to it. Returns the rank statistics of the right cell."""
+    every cell of the split is ranked by distance to it. Returns the rank statistics of the right cell.
+    With score="cosine" the cells are ranked by direction alone: the cosine between the action vector and the
+    displacement from that control to each cell, so the vector's length plays no part."""
     S = states(adata, space)
     z = load_pairs(cfg, space, split)
     keys = S[z["cell"]]
@@ -59,11 +70,16 @@ def instance_retrieval(cfg, adata, space, split, actions, max_queries=None, seed
     F = np.stack([actions.get(c, np.zeros(D, np.float32)) for c in conds])
     Q = S[z["partners"][:, 0]] + F
     kn = (keys * keys).sum(1)
+    C, Fu = Q - F, _unit(F)
     ranks, same10 = [], []
     for i in range(0, len(q_idx), chunk):
         qi = q_idx[i:i + chunk]
         q = Q[qi]
         d2 = (q * q).sum(1)[:, None] + kn[None, :] - 2 * q @ keys.T
+        if score == "cosine":  # minus cos(f, cell - control), so that smaller is still better
+            c0, f = C[qi], Fu[qi]
+            length = np.sqrt(np.maximum((c0 * c0).sum(1)[:, None] + kn[None, :] - 2 * c0 @ keys.T, 1e-12))
+            d2 = -(f @ keys.T - (f * c0).sum(1)[:, None]) / length
         ranks.append(_avg_rank(d2[np.arange(len(qi)), qi], d2))
         top10 = np.argpartition(d2, 10, axis=1)[:, :10]
         same10.append((conds[top10] == conds[qi][:, None]).mean(1))
@@ -73,10 +89,12 @@ def instance_retrieval(cfg, adata, space, split, actions, max_queries=None, seed
             "recall@100": float((r <= 100).mean()), "same_pert@10": float(np.concatenate(same10).mean())}
 
 
-def identification(cfg, adata, space, split, actions, genes, start="pooled_ot"):
+def identification(cfg, adata, space, split, actions, genes, start="pooled_ot", score="distance"):
     """The reverse test. From a start state chosen without the cell's label (its pooled OT partners, or the mean
     control of its gem group), every action vector and "no perturbation" is tried, and the true perturbation is
-    ranked by how close each lands to the cell. Returns the summary and the rank of every cell."""
+    ranked by how close each lands to the cell. Returns the summary and the rank of every cell.
+    With score="cosine" the genes are ranked by direction alone: the cosine between each action vector and the
+    displacement from the start to the cell. "No perturbation" has no direction and is not a candidate."""
     S = states(adata, space)
     z = load_pairs(cfg, space, split, pooled=True)
     x = S[z["cell"]]
@@ -91,6 +109,9 @@ def identification(cfg, adata, space, split, actions, genes, start="pooled_ot"):
     Fm = np.stack([actions.get(g, np.zeros(S.shape[1], np.float32)) for g in genes] + [np.zeros(S.shape[1], np.float32)])
     v = s0 - x
     d2 = (v * v).sum(1)[:, None] + (Fm * Fm).sum(1)[None, :] + 2 * v @ Fm.T
+    if score == "cosine":  # v = start - cell, so cos(f, v) is minus the cosine with the displacement: smaller is better
+        cand = genes
+        d2 = _unit(v) @ _unit(Fm[:-1]).T
     ci = {g: i for i, g in enumerate(cand)}
     t = np.array([ci[c] for c in z["cond"]])
     r = _avg_rank(d2[np.arange(len(t)), t], d2)
@@ -100,35 +121,38 @@ def identification(cfg, adata, space, split, actions, genes, start="pooled_ot"):
 
 
 # --------------------------------------------------------------------------- every set of vectors, both tests
-def build_action_sets(cfg, adata, space, genes, ms):
+def build_action_sets(cfg, adata, space, genes, ms, variants=("infonce",)):
     """Every set of action vectors that is tested in one state space, keyed by (name, seed), plus the rescaling
     numbers fitted on training pairs. The references (mean shift, no action, shuffled) come first, then, for each
-    seed with saved InfoNCE vectors: as trained, rescaled globally and per gene, the two length swaps, and anchored."""
+    seed with saved InfoNCE vectors: as trained, rescaled globally and per gene, the two length swaps, and anchored.
+    `variants` names the stored sets of learned vectors to include; each gets the same rescalings and length swaps,
+    named after it (for example "infonce_cos_scaled_per_action")."""
     scale_rows = []
     rng = np.random.default_rng(cfg["seed"])
     perm = rng.permutation(len(genes))
     sets = {("mean_shift", 0): ms, ("zero", 0): {},
             ("shuffled_mean_shift", 0): {g: ms[genes[perm[i]]] for i, g in enumerate(genes)}}
     for seed in cfg["eval"]["seeds"]:
-        if actions_path(cfg, space, seed).exists():
-            acts = load_actions(cfg, space, seed)
-            sets[("infonce", seed)] = acts
+        for name in variants:
+            if not actions_path(cfg, space, seed, name).exists():
+                log.warning("%s seed %d: no saved InfoNCE vectors (%s); this seed is left out", space, seed,
+                            actions_path(cfg, space, seed, name).name)
+                continue
+            acts = load_actions(cfg, space, seed, name)
+            sets[(name, seed)] = acts
             alpha = calibrate_scale(cfg, adata, space, acts)
-            sets[("infonce_calibrated", seed)] = {g: alpha * v for g, v in acts.items()}
+            sets[(f"{name}_calibrated", seed)] = {g: alpha * v for g, v in acts.items()}
             c = per_action_scale(cfg, adata, space, acts)
-            sets[("infonce_scaled_per_action", seed)] = {g: c[g] * v for g, v in acts.items()}
-            scale_rows += [{"space": space, "actions": "infonce", "seed": seed, "gene": g, "c": v, "alpha": alpha}
+            sets[(f"{name}_scaled_per_action", seed)] = {g: c[g] * v for g, v in acts.items()}
+            scale_rows += [{"space": space, "actions": name, "seed": seed, "gene": g, "c": v, "alpha": alpha}
                            for g, v in c.items()]
-            log.info("%s seed %d: per-action scales c_a median %.3f (range %.3f to %.3f)", space, seed,
+            log.info("%s %s seed %d: per-action scales c_a median %.3f (range %.3f to %.3f)", space, name, seed,
                      np.median(list(c.values())), min(c.values()), max(c.values()))
             # length vs direction controls: swap the lengths of the two action sets gene by gene
             nrm = lambda v: v / np.linalg.norm(v)
-            sets[("infonce_dir_meanshift_len", seed)] = {g: nrm(acts[g]) * np.linalg.norm(ms[g]) for g in genes}
-            sets[("meanshift_dir_infonce_len", seed)] = {g: nrm(ms[g]) * np.linalg.norm(acts[g]) for g in genes}
-            log.info("%s seed %d: InfoNCE length calibration alpha = %.3f (fitted on training pairs)", space, seed, alpha)
-        else:
-            log.warning("%s seed %d: no saved InfoNCE vectors (%s); this seed is left out", space, seed,
-                        actions_path(cfg, space, seed).name)
+            sets[(f"{name}_dir_meanshift_len", seed)] = {g: nrm(acts[g]) * np.linalg.norm(ms[g]) for g in genes}
+            sets[(f"meanshift_dir_{name}_len", seed)] = {g: nrm(ms[g]) * np.linalg.norm(acts[g]) for g in genes}
+            log.info("%s %s seed %d: length calibration alpha = %.3f (fitted on training pairs)", space, name, seed, alpha)
         if actions_path(cfg, space, seed, "infonce_anchor").exists():  # trained with the length anchor; scales logged, not applied
             acts = load_actions(cfg, space, seed, "infonce_anchor")
             sets[("infonce_anchor", seed)] = acts
@@ -139,15 +163,20 @@ def build_action_sets(cfg, adata, space, genes, ms):
     return sets, scale_rows
 
 
-def run_tests(cfg):
+def run_tests(cfg, variants=("infonce",)):
     """Run both tests on every set of action vectors, in every state space, on validation cells and on training
-    cells, and write the five Week 2 result tables."""
+    cells, and write the five Week 2 result tables.
+
+    With other `variants` (stored sets of learned vectors, e.g. ("infonce", "infonce_cos")) the same tables go to
+    results/<last variant>/ instead, and both tests are also scored by direction alone (tasks "instance_cos" and
+    "identify_cos_<start>"), which needs no length. No test cell is read either way."""
+    by_direction = tuple(variants) != ("infonce",)
     adata, splits = load_all(cfg)
     genes = sorted(splits["train_singles"])
     rows, per_rows, strength_rows, scale_rows, len_rows = [], [], [], [], []
     for space in cfg["ot"]["spaces"]:
         ms = mean_shift_actions(cfg, adata, space)
-        sets, scales = build_action_sets(cfg, adata, space, genes, ms)
+        sets, scales = build_action_sets(cfg, adata, space, genes, ms, variants)
         scale_rows += scales
         strength, tier = effect_tiers(adata, space, ms)
         strength_rows += [{"space": space, "gene": g, "strength": s, "tier": tier[g]} for g, s in strength.items()]
@@ -169,16 +198,31 @@ def run_tests(cfg):
                                                              n="size").reset_index()
                         per_rows.append(pp.assign(space=space, actions=name, seed=seed, start=start,
                                                   strength=pp["cond"].map(strength), tier=pp["cond"].map(tier)))
+                    if by_direction:
+                        m, per = identification(cfg, adata, space, split, acts, genes, start, score="cosine")
+                        rows += [base | {"task": f"identify_cos_{start}", "metric": k, "value": v} for k, v in m.items()]
+                        per["tier"] = per["cond"].map(tier)
+                        for t, g in per.groupby("tier"):
+                            rows.append(base | {"task": f"identify_cos_{start}", "metric": f"top1_{t}", "value": float((g["rank"] <= 1).mean())})
+                if by_direction:
+                    r = instance_retrieval(cfg, adata, space, split, acts, max_queries=TRAIN_QUERY_CAP if split == "train" else None, score="cosine")
+                    rows += [base | {"task": "instance_cos", "metric": k, "value": v} for k, v in r.items()]
             v = {x["metric"]: x["value"] for x in rows if x["space"] == space and x["actions"] == name
                  and x["seed"] == seed and x["split"] == "val" and x["task"] == "instance"}
             log.info("%-9s %-20s s%d | val instance MRR %.3f R@10 %.3f same@10 %.3f", space, name, seed,
                      v.get("mrr", np.nan), v.get("recall@10", np.nan), v.get("same_pert@10", np.nan))
     df = pd.DataFrame(rows)
-    df.to_csv(path(cfg, "results_dir") / "week2_retrieval.csv", index=False)
-    pd.concat(per_rows).to_csv(path(cfg, "results_dir") / "week2_identification_by_pert.csv", index=False)
-    pd.DataFrame(strength_rows).to_csv(path(cfg, "results_dir") / "week2_effect_strength.csv", index=False)
-    pd.DataFrame(scale_rows).to_csv(path(cfg, "results_dir") / "week2_action_scales.csv", index=False)
-    pd.concat(len_rows).to_csv(path(cfg, "results_dir") / "week2_length_ratio.csv", index=False)
+    out = path(cfg, "results_dir")
+    if by_direction:  # another variant's tables get their own folder; the Week 2 files stay as they are
+        out = out / variants[-1]
+        out.mkdir(parents=True, exist_ok=True)
+    name = (lambda k: f"{k}.csv") if by_direction else (lambda k: f"week2_{k}.csv")
+    df.to_csv(out / name("retrieval"), index=False)
+    pd.concat(per_rows).to_csv(out / name("identification_by_pert"), index=False)
+    pd.DataFrame(strength_rows).to_csv(out / name("effect_strength"), index=False)
+    pd.DataFrame(scale_rows).to_csv(out / name("action_scales"), index=False)
+    pd.concat(len_rows).to_csv(out / name("length_ratio"), index=False)
+    log.info("wrote the result tables to %s", out)
     return df
 
 
@@ -186,12 +230,14 @@ def main():
     """Run both tests on every saved set of action vectors."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
+    ap.add_argument("--variant", default=None, help="another stored set of learned vectors to test next to the Week 2 "
+                    "InfoNCE ones, e.g. infonce_cos; results go to results/<variant>/")
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
     cfg = load_config(a.config)
     if a.spaces:
         cfg["ot"]["spaces"] = a.spaces
-    run_tests(cfg)
+    run_tests(cfg, ("infonce", a.variant) if a.variant else ("infonce",))
 
 
 if __name__ == "__main__":
