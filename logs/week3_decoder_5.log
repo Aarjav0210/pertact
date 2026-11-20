@@ -1,0 +1,24 @@
+name, driver_version, memory.total [MiB]
+NVIDIA L40S, 590.48.01, 46068 MiB
+torch 2.15.0+cu132 | cuda available: True
+13:27:30 evaluate INFO device cuda | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+13:27:44 evaluate INFO infonce_anchor_pca/latent_additive seed 0: 50 epochs (best 44), 12s | val:pearson_delta_de20=0.948 test:pearson_delta_de20=0.945 test:pearson_int_all=0.358
+13:27:57 evaluate INFO infonce_anchor_pca/latent_additive seed 1: 54 epochs (best 45), 13s | val:pearson_delta_de20=0.949 test:pearson_delta_de20=0.954 test:pearson_int_all=0.401
+13:28:05 evaluate INFO infonce_anchor_pca/latent_additive seed 2: 33 epochs (best 24), 8s | val:pearson_delta_de20=0.922 test:pearson_delta_de20=0.938 test:pearson_int_all=0.362
+13:28:14 evaluate INFO infonce_anchor_pca/decoder_only seed 0: 48 epochs (best 39), 8s | val:pearson_delta_de20=0.964 test:pearson_delta_de20=0.952 test:pearson_int_all=0.396
+13:28:24 evaluate INFO infonce_anchor_pca/decoder_only seed 1: 54 epochs (best 45), 9s | val:pearson_delta_de20=0.966 test:pearson_delta_de20=0.950 test:pearson_int_all=0.389
+13:28:30 evaluate INFO infonce_anchor_pca/decoder_only seed 2: 33 epochs (best 24), 6s | val:pearson_delta_de20=0.962 test:pearson_delta_de20=0.945 test:pearson_int_all=0.371
+13:28:42 evaluate INFO infonce_anchor_scvi/latent_additive seed 0: 50 epochs (best 41), 12s | val:pearson_delta_de20=0.953 test:pearson_delta_de20=0.934 test:pearson_int_all=0.337
+13:28:52 evaluate INFO infonce_anchor_scvi/latent_additive seed 1: 39 epochs (best 30), 9s | val:pearson_delta_de20=0.936 test:pearson_delta_de20=0.934 test:pearson_int_all=0.393
+13:29:09 evaluate INFO infonce_anchor_scvi/latent_additive seed 2: 71 epochs (best 62), 17s | val:pearson_delta_de20=0.962 test:pearson_delta_de20=0.941 test:pearson_int_all=0.376
+13:29:18 evaluate INFO infonce_anchor_scvi/decoder_only seed 0: 50 epochs (best 41), 9s | val:pearson_delta_de20=0.965 test:pearson_delta_de20=0.934 test:pearson_int_all=0.357
+13:29:30 evaluate INFO infonce_anchor_scvi/decoder_only seed 1: 69 epochs (best 60), 12s | val:pearson_delta_de20=0.967 test:pearson_delta_de20=0.943 test:pearson_int_all=0.418
+13:29:36 evaluate INFO infonce_anchor_scvi/decoder_only seed 2: 33 epochs (best 24), 6s | val:pearson_delta_de20=0.962 test:pearson_delta_de20=0.936 test:pearson_int_all=0.389
+13:29:36 decoder_test INFO doubles, tag anchor, device cuda, mean over seeds:
+split                                              val               test                
+metric                              pearson_delta_de20 pearson_delta_de20 pearson_int_all
+method              decoder                                                              
+infonce_anchor_pca  latent_additive              0.940              0.945           0.374
+                    decoder_only                 0.964              0.949           0.385
+infonce_anchor_scvi latent_additive              0.950              0.936           0.369
+                    decoder_only                 0.965              0.938           0.388

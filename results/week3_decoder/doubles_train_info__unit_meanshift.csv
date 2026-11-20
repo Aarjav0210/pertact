@@ -1,0 +1,13 @@
+method,decoder,seed,variant,space,best_val_mse,epochs,best_epoch,seconds,n_train_targets,n_train_conditions_dropped
+mean_shift_unit_pca,latent_additive,0,mean_shift_unit,X_pca_g,0.05973068550356783,64,55,15.85067105293274,44551,0
+mean_shift_unit_pca,latent_additive,1,mean_shift_unit,X_pca_g,0.059712070147834695,67,58,16.222409963607788,44551,0
+mean_shift_unit_pca,latent_additive,2,mean_shift_unit,X_pca_g,0.05987281195936873,33,24,8.003010749816895,44551,0
+mean_shift_unit_pca,decoder_only,0,mean_shift_unit,X_pca_g,0.05978891224650811,48,39,8.41110372543335,44551,0
+mean_shift_unit_pca,decoder_only,1,mean_shift_unit,X_pca_g,0.05976275333127603,54,45,9.455461263656616,44551,0
+mean_shift_unit_pca,decoder_only,2,mean_shift_unit,X_pca_g,0.05984767968916145,33,24,5.785377264022827,44551,0
+mean_shift_unit_scvi,latent_additive,0,mean_shift_unit,X_scvi30,0.059751509286821006,50,41,12.122954845428467,44551,0
+mean_shift_unit_scvi,latent_additive,1,mean_shift_unit,X_scvi30,0.05975258612338036,54,45,13.072791814804077,44551,0
+mean_shift_unit_scvi,latent_additive,2,mean_shift_unit,X_scvi30,0.05973389890249548,66,57,16.018792629241943,44551,0
+mean_shift_unit_scvi,decoder_only,0,mean_shift_unit,X_scvi30,0.0597879654516519,50,41,8.717401504516602,44551,0
+mean_shift_unit_scvi,decoder_only,1,mean_shift_unit,X_scvi30,0.059774912230519825,54,45,9.457978248596191,44551,0
+mean_shift_unit_scvi,decoder_only,2,mean_shift_unit,X_scvi30,0.05984516326813398,33,24,5.801713466644287,44551,0

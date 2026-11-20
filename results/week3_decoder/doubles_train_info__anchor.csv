@@ -1,0 +1,13 @@
+method,decoder,seed,variant,space,best_val_mse,epochs,best_epoch,seconds,n_train_targets,n_train_conditions_dropped
+infonce_anchor_pca,latent_additive,0,infonce_anchor,X_pca_g,0.05976486822002713,50,44,12.219933986663818,44551,0
+infonce_anchor_pca,latent_additive,1,infonce_anchor,X_pca_g,0.05974562547011216,54,45,13.02370023727417,44551,0
+infonce_anchor_pca,latent_additive,2,infonce_anchor,X_pca_g,0.059883413780324905,33,24,7.959800958633423,44551,0
+infonce_anchor_pca,decoder_only,0,infonce_anchor,X_pca_g,0.05978910046476266,48,39,8.427982091903687,44551,0
+infonce_anchor_pca,decoder_only,1,infonce_anchor,X_pca_g,0.05976362597954711,54,45,9.417100191116333,44551,0
+infonce_anchor_pca,decoder_only,2,infonce_anchor,X_pca_g,0.05983751704413256,33,24,5.792972087860107,44551,0
+infonce_anchor_scvi,latent_additive,0,infonce_anchor,X_scvi30,0.05974493419579546,50,41,12.021468162536621,44551,0
+infonce_anchor_scvi,latent_additive,1,infonce_anchor,X_scvi30,0.059808767561287876,39,30,9.384791851043701,44551,0
+infonce_anchor_scvi,latent_additive,2,infonce_anchor,X_scvi30,0.059730799575237255,71,62,17.105858087539673,44551,0
+infonce_anchor_scvi,decoder_only,0,infonce_anchor,X_scvi30,0.059789267009400016,50,41,8.67837643623352,44551,0
+infonce_anchor_scvi,decoder_only,1,infonce_anchor,X_scvi30,0.0597362077130846,69,60,12.007999181747437,44551,0
+infonce_anchor_scvi,decoder_only,2,infonce_anchor,X_scvi30,0.05983845471325522,33,24,5.773319721221924,44551,0

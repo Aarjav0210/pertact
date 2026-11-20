@@ -1,0 +1,24 @@
+name, driver_version, memory.total [MiB]
+NVIDIA L40S, 590.48.01, 46068 MiB
+torch 2.15.0+cu132 | cuda available: True
+13:23:05 evaluate INFO device cuda | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+13:23:20 evaluate INFO mean_shift_pca/latent_additive seed 0: 50 epochs (best 41), 12s | val:pearson_delta_de20=0.936 test:pearson_delta_de20=0.941 test:pearson_int_all=0.378
+13:23:34 evaluate INFO mean_shift_pca/latent_additive seed 1: 54 epochs (best 45), 13s | val:pearson_delta_de20=0.935 test:pearson_delta_de20=0.945 test:pearson_int_all=0.414
+13:23:47 evaluate INFO mean_shift_pca/latent_additive seed 2: 54 epochs (best 45), 13s | val:pearson_delta_de20=0.944 test:pearson_delta_de20=0.947 test:pearson_int_all=0.393
+13:23:56 evaluate INFO mean_shift_pca/decoder_only seed 0: 48 epochs (best 41), 9s | val:pearson_delta_de20=0.961 test:pearson_delta_de20=0.949 test:pearson_int_all=0.399
+13:24:06 evaluate INFO mean_shift_pca/decoder_only seed 1: 54 epochs (best 45), 10s | val:pearson_delta_de20=0.962 test:pearson_delta_de20=0.950 test:pearson_int_all=0.401
+13:24:12 evaluate INFO mean_shift_pca/decoder_only seed 2: 33 epochs (best 24), 6s | val:pearson_delta_de20=0.953 test:pearson_delta_de20=0.945 test:pearson_int_all=0.382
+13:24:25 evaluate INFO mean_shift_scvi/latent_additive seed 0: 50 epochs (best 41), 12s | val:pearson_delta_de20=0.934 test:pearson_delta_de20=0.933 test:pearson_int_all=0.374
+13:24:42 evaluate INFO mean_shift_scvi/latent_additive seed 1: 67 epochs (best 58), 17s | val:pearson_delta_de20=0.948 test:pearson_delta_de20=0.936 test:pearson_int_all=0.420
+13:25:00 evaluate INFO mean_shift_scvi/latent_additive seed 2: 66 epochs (best 57), 17s | val:pearson_delta_de20=0.954 test:pearson_delta_de20=0.936 test:pearson_int_all=0.403
+13:25:09 evaluate INFO mean_shift_scvi/decoder_only seed 0: 50 epochs (best 41), 9s | val:pearson_delta_de20=0.963 test:pearson_delta_de20=0.934 test:pearson_int_all=0.381
+13:25:19 evaluate INFO mean_shift_scvi/decoder_only seed 1: 54 epochs (best 45), 10s | val:pearson_delta_de20=0.963 test:pearson_delta_de20=0.942 test:pearson_int_all=0.404
+13:25:25 evaluate INFO mean_shift_scvi/decoder_only seed 2: 33 epochs (best 24), 6s | val:pearson_delta_de20=0.956 test:pearson_delta_de20=0.935 test:pearson_int_all=0.385
+13:25:25 decoder_test INFO doubles, tag meanshift, device cuda, mean over seeds:
+split                                          val               test                
+metric                          pearson_delta_de20 pearson_delta_de20 pearson_int_all
+method          decoder                                                              
+mean_shift_pca  latent_additive              0.938              0.944           0.395
+                decoder_only                 0.958              0.948           0.394
+mean_shift_scvi latent_additive              0.946              0.935           0.399
+                decoder_only                 0.961              0.937           0.390

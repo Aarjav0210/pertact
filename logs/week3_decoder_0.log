@@ -1,0 +1,41 @@
+name, driver_version, memory.total [MiB]
+NVIDIA L40S, 590.48.01, 46068 MiB
+torch 2.15.0+cu132 | cuda available: True
+13:20:24 evaluate INFO device cuda | train targets 44551 | val targets 10897 | hp {'latent_dim': 128, 'hidden_dim': 1024, 'n_layers': 2, 'dropout': 0.0, 'lr': 0.0003}
+13:20:24 evaluate WARNING reloading decoders saved without an embedding fingerprint; delete a file in /orcd/home/002/jpchen25/pertact/pertact/models/decoders to retrain it
+13:20:24 evaluate INFO onehot/latent_additive seed 0: 53 epochs (best 44), 135s | val:pearson_delta_de20=0.965 test:pearson_delta_de20=0.960 test:pearson_int_all=0.361
+13:20:25 evaluate INFO onehot/latent_additive seed 1: 39 epochs (best 30), 91s | val:pearson_delta_de20=0.958 test:pearson_delta_de20=0.962 test:pearson_int_all=0.391
+13:20:25 evaluate INFO onehot/latent_additive seed 2: 42 epochs (best 33), 82s | val:pearson_delta_de20=0.955 test:pearson_delta_de20=0.960 test:pearson_int_all=0.402
+13:20:25 evaluate INFO onehot/decoder_only seed 0: 85 epochs (best 76), 310s | val:pearson_delta_de20=0.969 test:pearson_delta_de20=0.965 test:pearson_int_all=0.377
+13:20:25 evaluate INFO onehot/decoder_only seed 1: 67 epochs (best 58), 191s | val:pearson_delta_de20=0.965 test:pearson_delta_de20=0.961 test:pearson_int_all=0.380
+13:20:26 evaluate INFO onehot/decoder_only seed 2: 33 epochs (best 24), 98s | val:pearson_delta_de20=0.967 test:pearson_delta_de20=0.961 test:pearson_int_all=0.329
+13:20:26 evaluate INFO pca_loadings/latent_additive seed 0: 67 epochs (best 58), 126s | val:pearson_delta_de20=0.964 test:pearson_delta_de20=0.917 test:pearson_int_all=0.334
+13:20:26 evaluate INFO pca_loadings/latent_additive seed 1: 69 epochs (best 60), 156s | val:pearson_delta_de20=0.967 test:pearson_delta_de20=0.926 test:pearson_int_all=0.357
+13:20:26 evaluate INFO pca_loadings/latent_additive seed 2: 82 epochs (best 73), 184s | val:pearson_delta_de20=0.966 test:pearson_delta_de20=0.926 test:pearson_int_all=0.340
+13:20:27 evaluate INFO pca_loadings/decoder_only seed 0: 85 epochs (best 76), 284s | val:pearson_delta_de20=0.968 test:pearson_delta_de20=0.919 test:pearson_int_all=0.369
+13:20:27 evaluate INFO pca_loadings/decoder_only seed 1: 78 epochs (best 69), 201s | val:pearson_delta_de20=0.969 test:pearson_delta_de20=0.920 test:pearson_int_all=0.361
+13:20:27 evaluate INFO pca_loadings/decoder_only seed 2: 81 epochs (best 72), 208s | val:pearson_delta_de20=0.968 test:pearson_delta_de20=0.910 test:pearson_int_all=0.362
+13:20:42 evaluate INFO infonce_scaled_per_action_pca/latent_additive seed 0: 50 epochs (best 41), 12s | val:pearson_delta_de20=0.931 test:pearson_delta_de20=0.942 test:pearson_int_all=0.369
+13:20:53 evaluate INFO infonce_scaled_per_action_pca/latent_additive seed 1: 39 epochs (best 30), 10s | val:pearson_delta_de20=0.922 test:pearson_delta_de20=0.947 test:pearson_int_all=0.380
+13:21:10 evaluate INFO infonce_scaled_per_action_pca/latent_additive seed 2: 66 epochs (best 57), 17s | val:pearson_delta_de20=0.955 test:pearson_delta_de20=0.949 test:pearson_int_all=0.378
+13:21:19 evaluate INFO infonce_scaled_per_action_pca/decoder_only seed 0: 48 epochs (best 44), 9s | val:pearson_delta_de20=0.958 test:pearson_delta_de20=0.950 test:pearson_int_all=0.381
+13:21:29 evaluate INFO infonce_scaled_per_action_pca/decoder_only seed 1: 54 epochs (best 45), 10s | val:pearson_delta_de20=0.957 test:pearson_delta_de20=0.950 test:pearson_int_all=0.382
+13:21:35 evaluate INFO infonce_scaled_per_action_pca/decoder_only seed 2: 33 epochs (best 24), 6s | val:pearson_delta_de20=0.951 test:pearson_delta_de20=0.941 test:pearson_int_all=0.361
+13:21:48 evaluate INFO infonce_scaled_per_action_scvi/latent_additive seed 0: 50 epochs (best 41), 12s | val:pearson_delta_de20=0.920 test:pearson_delta_de20=0.932 test:pearson_int_all=0.379
+13:22:05 evaluate INFO infonce_scaled_per_action_scvi/latent_additive seed 1: 67 epochs (best 58), 16s | val:pearson_delta_de20=0.941 test:pearson_delta_de20=0.941 test:pearson_int_all=0.394
+13:22:13 evaluate INFO infonce_scaled_per_action_scvi/latent_additive seed 2: 33 epochs (best 24), 8s | val:pearson_delta_de20=0.892 test:pearson_delta_de20=0.923 test:pearson_int_all=0.374
+13:22:22 evaluate INFO infonce_scaled_per_action_scvi/decoder_only seed 0: 50 epochs (best 44), 9s | val:pearson_delta_de20=0.960 test:pearson_delta_de20=0.938 test:pearson_int_all=0.374
+13:22:32 evaluate INFO infonce_scaled_per_action_scvi/decoder_only seed 1: 54 epochs (best 45), 9s | val:pearson_delta_de20=0.958 test:pearson_delta_de20=0.946 test:pearson_int_all=0.392
+13:22:38 evaluate INFO infonce_scaled_per_action_scvi/decoder_only seed 2: 33 epochs (best 24), 6s | val:pearson_delta_de20=0.945 test:pearson_delta_de20=0.935 test:pearson_int_all=0.358
+13:22:38 decoder_test INFO doubles, tag main, device cuda, mean over seeds:
+split                                                         val               test                
+metric                                         pearson_delta_de20 pearson_delta_de20 pearson_int_all
+method                         decoder                                                              
+onehot                         latent_additive              0.959              0.960           0.385
+                               decoder_only                 0.967              0.963           0.362
+pca_loadings                   latent_additive              0.966              0.923           0.344
+                               decoder_only                 0.968              0.916           0.364
+infonce_scaled_per_action_pca  latent_additive              0.936              0.946           0.376
+                               decoder_only                 0.956              0.947           0.374
+infonce_scaled_per_action_scvi latent_additive              0.918              0.932           0.382
+                               decoder_only                 0.954              0.940           0.375
