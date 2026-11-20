@@ -1,8 +1,9 @@
 # Week 3 report: adding two action vectors, scored on the 127 test doubles
 
-**One run, 11 November 2026.** Every Week 2 action set was scored once on the test doubles, in the frozen state
-spaces, with no decoder. The list of action sets, references and scores was fixed in `src/pertact/doubles.py` before
-the run. Nothing was chosen or tuned from these numbers.
+**Two runs, one per route.** On 11 November 2026 every Week 2 action set was scored once on the test doubles in the
+frozen state spaces, with no decoder (sections 2.1 to 2.5). On 13 November the same vectors were scored once as inputs
+of a trained decoder (section 2.6). For each run the list of action sets, references and scores was fixed beforehand
+(in `src/pertact/doubles.py`, and in the README for the decoder run). Nothing was chosen or tuned from these numbers.
 
 **Short version.**
 * Adding two mean shifts lands close to the real double: the median miss is 14% (PCA-50) and 17% (scVI-30) of the
@@ -14,6 +15,9 @@ the run. Nothing was chosen or tuned from these numbers.
 * Next to the Week 1 embeddings (section 2.5, PCA-50, not like for like): one-hot and GenePT through their trained
   decoders land about as close as the summed mean shifts (0.12–0.14). The InfoNCE vectors in that table were added
   directly and have not been through a trained decoder.
+* Through a trained decoder (section 2.6, like for like): the PCA-50 action vectors score 0.944–0.953 on the doubles,
+  just below one-hot (0.960 / 0.963) and GenePT and above PCA loadings and STRING. InfoNCE and the mean shift tie; as
+  directions only, InfoNCE's compose better. Nothing beats adding the two singles (0.968).
 
 ## 1. What was run
 
@@ -194,7 +198,7 @@ A secondary view: the doubles grouped by the effect strength of their two genes 
 **Read this first.** The rows marked *trained decoder* are a Week 1 embedding plus a decoder trained on singles. The
 rows marked *added directly* are bare vectors summed in the state space: the mean shift and every InfoNCE set. **No
 Week 2 action vector in this table has been through a trained decoder on the doubles.** The like-for-like test, the
-same vectors as decoder inputs scored on the doubles, has not been run (section 4).
+same vectors as decoder inputs scored on the doubles, is in section 2.6.
 
 **How.** Week 1 saved each decoder's predicted mean expression profile for every test double. PCA-50 is a linear map
 of expression, so each profile was projected into PCA-50 and scored as in 2.1 and 2.3. scVI-30 is not a linear map
@@ -233,10 +237,71 @@ miss ratio is 0.204 / 0.202.
 * **Limits.** Only the part of each Week 1 prediction inside the 50 components counts. Week 1 predictions exist for
   the 127 measured doubles only, so there is no all-combinations column.
 
+### 2.6 Through a trained decoder (like for like)
+
+**One run, 13 November 2026, on a GPU cluster.** Each action-vector set was the perturbation input of the two Week 1
+decoders (`python -I -m pertact.evaluate actions --doubles`). The decoders were trained on the training cells of the
+105 singles, stopped on the validation cells' loss, and scored on the 127 test doubles, where a double's input is the
+sum of its two genes' vectors. Six sets, fixed before the run: InfoNCE per action (with one-hot and PCA loadings as
+references), InfoNCE as trained, the mean shift, InfoNCE and mean-shift directions only, and the anchored set. 72
+decoders, about 10 seconds each. The reloaded Week 1 decoders reproduce the Week 1 scores (largest difference 4e-07).
+InfoNCE with global α is not a separate set: every table is rescaled to an average length of 1 before the decoder, so it
+would be identical to InfoNCE as trained.
+
+Pearson Δ and MSE are on the top-20 DE genes. Cells are latent additive / decoder-only, means of 3 seeds:
+
+| decoder input | doubles: Pearson Δ | seed sd | doubles: MSE | non-additive quarter: Pearson Δ | beats adding the singles | validation singles: Pearson Δ |
+|---|---|---|---|---|---|---|
+| adding the two singles (no decoder) | **0.968** | n/a | 0.057 | **0.946** | n/a | n/a |
+| one-hot (Week 1) | 0.960 / 0.963 | 0.001 / 0.002 | 0.062 / 0.062 | 0.930 / 0.936 | 35% / 17% | 0.959 / 0.967 |
+| GenePT (Week 1) | 0.950 / 0.954 | 0.009 / 0.005 | 0.072 / 0.066 | 0.925 / 0.925 | 22% / 15% | 0.952 / 0.956 |
+| InfoNCE as trained, PCA-50 | 0.947 / 0.953 | 0.009 / 0.004 | 0.067 / 0.068 | 0.911 / 0.919 | 13% / 18% | 0.956 / 0.967 |
+| InfoNCE, per action, PCA-50 | 0.946 / 0.947 | 0.004 / 0.005 | 0.070 / 0.080 | 0.905 / 0.909 | 26% / 23% | 0.936 / 0.956 |
+| InfoNCE with the ρ = 1 anchor, PCA-50 | 0.945 / 0.949 | 0.008 / 0.004 | 0.060 / 0.061 | 0.909 / 0.913 | 18% / 24% | 0.940 / 0.964 |
+| mean shift, PCA-50 | 0.944 / 0.948 | 0.003 / 0.002 | 0.058 / 0.061 | 0.903 / 0.913 | 24% / 25% | 0.938 / 0.958 |
+| InfoNCE direction only, PCA-50 | 0.944 / 0.948 | 0.008 / 0.006 | 0.076 / 0.085 | 0.914 / 0.917 | 9% / 7% | 0.959 / 0.967 |
+| InfoNCE with the ρ = 1 anchor, scVI-30 | 0.936 / 0.938 | 0.004 / 0.004 | 0.069 / 0.069 | 0.892 / 0.896 | 18% / 18% | 0.950 / 0.965 |
+| mean shift, scVI-30 | 0.935 / 0.937 | 0.002 / 0.004 | 0.065 / 0.069 | 0.888 / 0.896 | 21% / 19% | 0.946 / 0.961 |
+| InfoNCE as trained, scVI-30 | 0.935 / 0.940 | 0.005 / 0.003 | 0.081 / 0.082 | 0.894 / 0.903 | 15% / 13% | 0.963 / 0.965 |
+| InfoNCE, per action, scVI-30 | 0.932 / 0.940 | 0.009 / 0.006 | 0.076 / 0.083 | 0.882 / 0.899 | 14% / 14% | 0.918 / 0.954 |
+| mean shift direction only, PCA-50 | 0.930 / 0.931 | 0.007 / 0.005 | 0.089 / 0.090 | 0.901 / 0.898 | 11% / 5% | 0.959 / 0.966 |
+| PCA loadings (Week 1) | 0.923 / 0.916 | 0.005 / 0.006 | 0.123 / 0.139 | 0.903 / 0.907 | 9% / 9% | 0.966 / 0.968 |
+| InfoNCE direction only, scVI-30 | 0.919 / 0.928 | 0.007 / 0.004 | 0.101 / 0.103 | 0.875 / 0.889 | 8% / 10% | 0.965 / 0.965 |
+| mean shift direction only, scVI-30 | 0.896 / 0.915 | 0.005 / 0.002 | 0.132 / 0.114 | 0.838 / 0.866 | 6% / 8% | 0.964 / 0.966 |
+| STRING node2vec (Week 1) | 0.887 / 0.895 | 0.002 / 0.007 | 0.123 / 0.139 | 0.856 / 0.882 | 14% / 14% | 0.865 / 0.844 |
+
+"Beats adding the singles" is the share of the 127 doubles with a higher Pearson Δ than the additive expression
+baseline, with each double's score averaged over seeds. STRING on the 108 doubles it covers scores 0.934 / 0.951.
+
+* **Like for like, the action vectors sit just below the best Week 1 embeddings.** The PCA-50 sets that keep a length
+  score 0.944–0.953, against 0.960 / 0.963 for one-hot and 0.950 / 0.954 for GenePT, and above PCA loadings
+  and STRING.
+* **Nothing beats adding the two singles** (0.968). The best action set is ahead of it for 26% of the doubles;
+  one-hot for 35%.
+* **InfoNCE and the mean shift tie.** With their own lengths, an InfoNCE set is ahead of the mean shift of the same
+  space for 39–57% of the doubles.
+* **As directions only, InfoNCE's compose better than the mean shift's:** 0.944 / 0.948 against 0.930 / 0.931 in
+  PCA-50 and 0.919 / 0.928 against 0.896 / 0.915 in scVI-30, ahead for 65–80% of the doubles. On validation
+  singles the two were level. This is the first score on landing where InfoNCE's directions beat the mean shift's.
+* **The overshoot does not matter once a decoder sits on top.** InfoNCE as trained is the highest action set
+  (0.947 / 0.953).
+* **Equal lengths help seen singles and hurt doubles.** For the mean shift in PCA-50 (latent additive), dividing
+  every vector by its length raises validation singles from 0.938 to 0.959 and lowers doubles from 0.944 to
+  0.930. Validation singles therefore do not predict how a set composes.
+* **On the size of the error, the mean shift is level with one-hot and with addition:** MSE 0.058 / 0.061
+  against 0.062 / 0.062 for one-hot and 0.057 for adding the singles.
+* **PCA-50 vectors compose better than scVI-30 vectors** (0.944–0.953 against 0.932–0.940 for the sets with a length).
+* **Nothing captures the non-additive part.** The interaction score on all genes is 0.29–0.40 for every
+  input, around the 0.375 of "predict no change"; the noise ceiling is 0.89. On the most non-additive quarter every
+  action set is below adding the singles (0.946).
+
 ## 3. What this means
 
-* **Week 2's open question** was whether InfoNCE beats the closed-form mean shift once doubles are scored. For
-  landing on the double it does not, in either space, with any rescaling or the anchor.
+* **Week 2's open question** was whether InfoNCE beats the closed-form mean shift once doubles are scored. Added
+  directly, it does not land closer, in either space, with any rescaling or the anchor. Through a trained decoder the
+  two tie, except as directions only, where InfoNCE's are better.
+* **Against the Week 1 embeddings, like for like,** the action vectors are close to but below one-hot, and nothing
+  beats adding the two singles' measured changes.
 * **InfoNCE's one advantage is narrow and unchanged from Week 2:** naming the perturbation from a single cell in
   PCA-50, once its lengths are rescaled.
 * **The additive model leaves 14–17% of the squared shift unexplained,** of which about 1 point is sampling noise in
@@ -248,10 +313,10 @@ miss ratio is 0.204 / 0.202.
 
 * **One look.** There are no development doubles. If these numbers are used to pick a variant, a later score for
   that variant on the same doubles is optimistic.
-* **No action vector has been through a trained decoder on the doubles.** That like-for-like test (frozen actions as
-  decoder inputs, scored on doubles with the Week 1 metrics) is written, `python -I -m pertact.evaluate actions
-  --doubles` with the six fixed sets in the README, and has not been run. It needs the decoders retrained on the
-  POT-based vectors.
+* **The decoder route has also had its one look** (section 2.6). The same rule applies: no variant is to be chosen
+  from those scores and then reported on the same doubles.
+* **The 72 decoders and their predictions are on the cluster,** not in the repository. The score files are. So the
+  decoder predictions have not been projected into PCA-50, and section 2.5 remains not like for like.
 * **The breakdown in 2.4 is secondary.** The strength labels were in the code before the run, but the breakdown was
   not one of the headline scores.
 * **Naming scores are averaged over cells,** as in Week 2, so doubles with more cells (50 to 1,001) weigh more.
@@ -264,4 +329,7 @@ miss ratio is 0.204 / 0.202.
 * Scores per double: `results/week3_doubles_by_pair.csv`.
 * Week 1 predictions in PCA-50: `scripts/week3_week1_in_state_space.py`, `results/week3_doubles_week1_embeddings.csv`
   and `week3_doubles_week1_embeddings_by_pair.csv`.
+* Decoder test: `results/week3_decoder/doubles__<tag>.csv` with the per-perturbation and training-info files, the
+  summaries `summary.csv` and `paired.csv` from `scripts/week3_decoder_summary.py`, the job script
+  `scripts/week3_decoder.sbatch`, and the logs `logs/week3_decoder_<n>.log`.
 * Log: `logs/week3_doubles.log`.

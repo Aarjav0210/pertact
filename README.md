@@ -134,7 +134,7 @@ The doubles are test data and none is set aside for development. The action sets
 `src/pertact/doubles.py` before the one run of 2026-11-11. Do not choose a variant from `results/week3_doubles.csv`
 and then report its score on the same doubles as a test result.
 
-**Week 3, through the decoders (not run yet)**
+**Week 3, through the decoders (run once, on 2026-11-13, on a GPU cluster)**
 
 The like-for-like comparison with the Week 1 embeddings: each action-vector set is the input of the Week 1 decoders,
 which are trained on training singles, stopped on validation singles, and then scored on the 127 test doubles with the
@@ -147,13 +147,16 @@ python -I -m pertact.evaluate actions --doubles --variants mean_shift --referenc
 python -I -m pertact.evaluate actions --doubles --variants infonce_unit --references --tag unit_infonce
 python -I -m pertact.evaluate actions --doubles --variants mean_shift_unit --references --tag unit_meanshift
 python -I -m pertact.evaluate actions --doubles --variants infonce_anchor --references --tag anchor
+python -I scripts/week3_decoder_summary.py      # results/week3_decoder/summary.csv and paired.csv
 ```
 
 On a SLURM cluster, `sbatch -p <gpu partition> scripts/week3_decoder.sbatch` runs the six as one array job, one GPU
 each. These six sets are the fixed list for this test, and the headline score is the Week 1 one: Pearson Δ on the top-20
 DE genes of each double, against 0.968 for the additive expression baseline. Scores go to
 `results/week3_decoder/doubles__<tag>.csv` (validation and test rows), decoders to `models/decoders/`. With a saved
-Week 1 decoder the command reproduces `results/week1.csv` on both splits (largest difference 1e-16).
+Week 1 decoder the command reproduces `results/week1.csv` on both splits (largest difference 1e-16 on the laptop, 4e-07
+on the cluster's GPU). The 72 decoders of the 2026-11-13 run and their predictions stayed on the cluster; the score
+files are in the repository. Running the six commands elsewhere trains new decoders, whose scores will differ slightly.
 
 ## Checks
 
