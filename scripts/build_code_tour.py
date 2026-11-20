@@ -188,6 +188,9 @@ GROUPS = [
         dict(path="scripts/week3_week1_in_state_space.py", role="Scores the saved Week 1 predictions of the test doubles with the Week 3 state-space scores, by projecting them into PCA-50. Not like for like: these rows have a trained decoder, the action vectors were added directly.",
              run=["python -I scripts/week3_week1_in_state_space.py"], reads="`results/predictions/`, `results/week3_doubles_by_pair.csv`, `models/pca_g.npz`",
              writes="`results/week3_doubles_week1_embeddings.csv`, `week3_doubles_week1_embeddings_by_pair.csv`", cells="TE cells: the doubles and the test controls, to score saved predictions. Fits nothing."),
+        dict(path="scripts/week3_decoder_summary.py", role="Summarises the Week 3 decoder test: every action-vector set as a decoder input on the test doubles, next to the Week 1 embeddings, with seed spreads and double-by-double comparisons.",
+             run=["python -I scripts/week3_decoder_summary.py"], reads="`results/week3_decoder/doubles__*.csv` and their per-perturbation files, `results/week1.csv`",
+             writes="`results/week3_decoder/summary.csv`, `paired.csv`", cells="none (reads saved VA and TE scores)"),
         dict(path="scripts/plot_ot_pairs.py", role="Draws the OT pairs of a few perturbations in a 2-D slice of a state space, next to random pairs.",
              run=["python -I scripts/plot_ot_pairs.py"], writes="`figures/ot_pairs_X_pca_g.png`, `results/ot/pair_plot_stats_X_pca_g.csv`", cells="TR cells of one gem group"),
     ]),
@@ -427,6 +430,13 @@ N["scripts/week3_week1_in_state_space.py"] = {
     "@head": "The docstring says why this works only in PCA-50 (it is a linear map of expression, scVI is not) and why the comparison is not like for like.",
     "score_shifts": "Scores one method's predicted shifts for the 127 doubles with the functions of `pertact.doubles`: miss, cosine and length for every double, and how often the right double is named from a cell and from its centre.",
     "main": "Projects the additive expression baseline and each saved Week 1 prediction of a double into PCA-50, subtracts the control centre that double is measured from, scores the result, and counts in how many doubles each run lands closer than the summed mean shifts. || It first checks the projection on test controls: their mean profile must land on the mean of their states. || STRING lacks vectors for 12 genes, so the summary also has a row over the 108 doubles it covers.",
+    "@main": "Runs `main`.",
+}
+N["scripts/week3_decoder_summary.py"] = {
+    "@head": "Which Week 1 rows are kept for comparison, and the headline score: Pearson delta on the top-20 DE genes.",
+    "load": "Reads the six score files of the decoder test and Week 1's. The one-hot and PCA-loading decoders in that run are the saved Week 1 models, so their rows are checked against Week 1 and then dropped; the script stops if they differ.",
+    "reference_set": "Names the mean-shift set an InfoNCE set is compared with: same state space, and direction only against direction only.",
+    "main": "Writes the mean and seed spread of every score. Then, with each double's score averaged over seeds, counts in how many of the 127 doubles a run beats adding the two singles, one-hot in the same decoder, and its matching mean-shift set.",
     "@main": "Runs `main`.",
 }
 N["scripts/plot_ot_pairs.py"] = {
