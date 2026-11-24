@@ -4,7 +4,8 @@ import pandas as pd
 import torch
 
 from pertact.decoders import LatentAdditive, PertEmbedding, SplitData
-from pertact.infonce import cosine_infonce_loss, infonce_loss
+from pertact.actions import soft_name, soft_variants
+from pertact.infonce import cosine_infonce_loss, infonce_loss, soft_targets
 from pertact.metrics import pearson, spearman_brown_ceiling
 from pertact.runs import fingerprint, replace_runs
 
@@ -67,6 +68,26 @@ def test_cosine_loss_ignores_length_and_only_turns_the_vectors():
     assert cosine_infonce_loss(F, ctrl, pert, a, 0.05) < right                             # a lower temperature sharpens a right answer
     right.backward()
     assert torch.allclose((F.grad * F).sum(1), torch.zeros(2), atol=1e-5)                  # the gradient is at right angles to f
+
+
+def test_soft_positive_labels_and_what_they_do_to_the_losses():
+    a = torch.tensor([0, 0, 1, 1])
+    T = soft_targets(a, 0.5)
+    assert torch.allclose(T.sum(1), torch.ones(4)) and torch.allclose(T, T.T)
+    assert torch.allclose(T[0], torch.tensor([1.0, 0.5, 0.0, 0.0]) / 1.5)          # partner 1, same perturbation s, others 0
+    assert torch.equal(soft_targets(a, 0.0), torch.eye(4))                         # s = 0 is one right answer per query
+    assert soft_name("cosine", 0.03) == "infonce_cos_soft0.03" and soft_name("distance", 1.0) == "infonce_soft1"
+    assert soft_variants({"infonce": {"soft_grid": [0, 0.1]}}) == ["infonce_cos", "infonce_cos_soft0", "infonce_cos_soft0.1", "infonce_soft0", "infonce_soft0.1"]
+    torch.manual_seed(0)
+    F, ctrl = torch.randn(2, 3), torch.randn(4, 3)
+    pert = ctrl + F[a] + 0.3 * torch.randn(4, 3)
+    for hard, soft0 in ((cosine_infonce_loss(F, ctrl, pert, a, 0.1), cosine_infonce_loss(F, ctrl, pert, a, 0.1, soft=0.0)),
+                        (infonce_loss(F, ctrl, pert, a, 0.1, 10.0), infonce_loss(F, ctrl, pert, a, 0.1, 10.0, soft=0.0))):
+        assert torch.isclose(hard, soft0, atol=1e-6)                               # the new path at s = 0 is the old loss
+    swap = torch.tensor([1, 0, 3, 2])                                              # exchange the two cells of each perturbation
+    for loss in (lambda p, s: cosine_infonce_loss(F, ctrl, p, a, 0.1, soft=s), lambda p, s: infonce_loss(F, ctrl, p, a, 0.1, 10.0, soft=s)):
+        assert torch.isclose(loss(pert, 1.0), loss(pert[swap], 1.0), atol=1e-6)    # at s = 1 the pairing no longer matters
+        assert not torch.isclose(loss(pert, 0.0), loss(pert[swap], 0.0), atol=1e-4)   # at s = 0 it does
 
 
 def test_pearson_and_the_noise_ceiling_formula():

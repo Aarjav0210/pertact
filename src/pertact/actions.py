@@ -20,6 +20,18 @@ def actions_path(cfg, space, seed, name="infonce"):
     return path(cfg, "embeddings_dir") / f"{name}__{space}__s{seed}.npz"
 
 
+def soft_name(score, s) -> str:
+    """Name under which the vectors trained with soft value s are stored: "infonce_soft<s>" for the distance score,
+    "infonce_cos_soft<s>" for the cosine score."""
+    return f"{'infonce_cos' if score == 'cosine' else 'infonce'}_soft{s:g}"
+
+
+def soft_variants(cfg) -> list[str]:
+    """Every stored set of the soft-positive experiment: the cosine vectors with one right answer, then each score at
+    each value of the configured grid."""
+    return ["infonce_cos"] + [soft_name(score, s) for score in ("cosine", "distance") for s in cfg["infonce"]["soft_grid"]]
+
+
 def load_actions(cfg, space, seed, name="infonce") -> dict[str, np.ndarray]:
     """One saved set of action vectors as {gene: vector}."""
     z = np.load(actions_path(cfg, space, seed, name))

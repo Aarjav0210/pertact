@@ -28,6 +28,14 @@ parameter learned with the vectors, as in CLIP (it starts at cosine.tau_init and
     python -I -m pertact.infonce train     # every space × seed with the chosen temperature
     python -I -m pertact.infonce anchor    # rho grid (seed 0, training-pair length ratio), then every space × seed
     python -I -m pertact.infonce cosine    # the cosine, unit-length variant: every space × seed
+    python -I -m pertact.infonce soft      # soft-positive labels: both scores × every value of soft_grid × space × seed
+
+Soft positives (Week 4). With the labels above, the K-1 other cells of a query's perturbation are wrong answers, exactly
+like the cells of other perturbations. `soft_targets` gives three levels instead: 1 for the query's own OT partner, s
+for the other cells of the same perturbation, 0 for cells of other perturbations, each row normalised to sum to 1. s = 0
+is the labelling above; s = 1 ignores the pairing and keeps only the perturbation. In the stored pairs a control is a
+partner of a single cell of a perturbation about 99% of the time, so the query's own partner is the only coupled cell.
+The vectors are saved as infonce_soft<s> (distance score) and infonce_cos_soft<s> (cosine score).
 Writes embeddings/infonce__<space>__s<seed>.npz (emb, genes) and results/infonce/ histories; the anchored actions go
 to embeddings/infonce_anchor__<space>__s<seed>.npz and the cosine ones to embeddings/infonce_cos__<space>__s<seed>.npz.
 """
@@ -41,7 +49,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from .actions import length_ratio, save_actions
+from .actions import length_ratio, save_actions, soft_name
 from .config import VAL_SEED_OFFSET, get_logger, load_config, path, read_json, seed_everything, write_json
 from .encoders import load_all, scale_D0
 from .ot import load_pairs
@@ -74,37 +82,48 @@ class PairData:
                 torch.as_tensor(self.a[rows]))
 
 
-def infonce_loss(F, s_ctrl, s_pert, a, tau, D0, rho=0.0):
+def soft_targets(a, s):
+    """The label table of one batch, one row per query: 1 for the query's own partner (the diagonal), s for the other
+    cells of the same perturbation, 0 for cells of other perturbations, with every row scaled to sum to 1. The table
+    is the same read by columns, so it also labels the other direction (each cell choosing among the queries)."""
+    T = s * (a[:, None] == a[None, :]).float()
+    T.fill_diagonal_(1.0)
+    return T / T.sum(1, keepdim=True)
+
+
+def infonce_loss(F, s_ctrl, s_pert, a, tau, D0, rho=0.0, soft=None):
     """The loss of one batch: each query (control state + action vector) against every perturbed cell of the batch,
-    scored by negative squared distance, symmetric over rows and columns. rho > 0 adds the length anchor."""
+    scored by negative squared distance, symmetric over rows and columns. rho > 0 adds the length anchor.
+    `soft` (a number s) replaces the one right answer per query by the three-level labels of `soft_targets`."""
     q = s_ctrl + F[a]
     d2 = (q * q).sum(1, keepdim=True) + (s_pert * s_pert).sum(1)[None, :] - 2 * q @ s_pert.T
     L = -d2 / (tau * D0)
-    y = torch.arange(len(a))
+    y = torch.arange(len(a)) if soft is None else soft_targets(a, soft)
     loss = 0.5 * (torch.nn.functional.cross_entropy(L, y) + torch.nn.functional.cross_entropy(L.T, y))
     if rho:  # weak length anchor: extra pull of each query onto its own OT partner (see module docstring)
         loss = loss + (rho / tau) * ((q - s_pert) ** 2).sum(1).mean() / D0
     return loss
 
 
-def cosine_infonce_loss(F, s_ctrl, s_pert, a, tau):
+def cosine_infonce_loss(F, s_ctrl, s_pert, a, tau, soft=None):
     """The cosine loss of one batch (CLIP-style): each action vector against the displacement from its own control
     to every perturbed cell of the batch, both at unit length, symmetric over rows and columns. The length of F
-    has no effect, so only the temperature tau sets how sharp the contrast is."""
+    has no effect, so only the temperature tau sets how sharp the contrast is. `soft` as in infonce_loss."""
     f = torch.nn.functional.normalize(F[a], dim=1)
     disp = torch.nn.functional.normalize(s_pert[None, :, :] - s_ctrl[:, None, :], dim=2)   # [n, m]: control n -> cell m
     L = (disp * f[:, None, :]).sum(2) / tau
-    y = torch.arange(len(a))
+    y = torch.arange(len(a)) if soft is None else soft_targets(a, soft)
     return 0.5 * (torch.nn.functional.cross_entropy(L, y) + torch.nn.functional.cross_entropy(L.T, y))
 
 
-def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, score="distance"):
+def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, score="distance", soft=None):
     """Learn one action vector per gene in one state space. The vectors start at zero and are the only thing trained.
     Training stops when the loss on fixed validation batches has not improved for `patience` checks; the best
     vectors are returned with their genes, the loss history and a summary.
 
     With score="cosine" the cosine loss is used instead: the vectors start from random directions (zero has no
-    direction), `tau` is the starting temperature and is learned with them, and the vectors come back at unit length."""
+    direction), `tau` is the starting temperature and is learned with them, and the vectors come back at unit length.
+    `soft` (a number s) trains and validates with the three-level labels of `soft_targets` instead of one right answer."""
     c = cfg["infonce"]
     seed_everything(seed)
     rng = np.random.default_rng(seed)
@@ -121,11 +140,11 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, s
         F = torch.randn(len(genes), S.shape[1]).requires_grad_()
         log_tau = torch.tensor(float(np.log(tau)), requires_grad=True)
         tau_now = lambda: log_tau.exp().clamp(min=cc["tau_min"])
-        batch_loss = lambda sc, sp, a: cosine_infonce_loss(F, sc, sp, a, tau_now())
+        batch_loss = lambda sc, sp, a: cosine_infonce_loss(F, sc, sp, a, tau_now(), soft)
         opt = torch.optim.Adam([F, log_tau] if cc["learn_tau"] else [F], lr=c["lr"])
     else:
         F = torch.zeros(len(genes), S.shape[1], requires_grad=True)
-        batch_loss = lambda sc, sp, a: infonce_loss(F, sc, sp, a, tau, D0, rho)
+        batch_loss = lambda sc, sp, a: infonce_loss(F, sc, sp, a, tau, D0, rho, soft)
         opt = torch.optim.Adam([F], lr=c["lr"])
     best, best_F, best_tau, bad, hist = np.inf, None, tau, 0, []
     t0 = time.time()
@@ -154,17 +173,17 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, s
                      seed, step, best, np.log(c["P"] * c["K"]), tau, best_tau, time.time() - t0)
         unit = torch.nn.functional.normalize(best_F, dim=1).numpy()
         return unit, genes, pd.DataFrame(hist), {"steps": step, "best_val_loss": best, "D0": D0, "score": "cosine",
-                                                 "tau_start": tau, "tau_learned": best_tau}
+                                                 "tau_start": tau, "tau_learned": best_tau} | ({} if soft is None else {"soft": soft})
     if verbose:
         log.info("%s seed %d tau %.3g rho %.3g: %d steps, best val loss %.4f (chance %.4f), %.0fs", space, seed, tau,
                  rho, step, best, np.log(c["P"] * c["K"]), time.time() - t0)
     with torch.no_grad():  # how much of the final validation loss is the anchor term
-        parts = [(infonce_loss(best_F, *b, tau, D0).item(), infonce_loss(best_F, *b, tau, D0, rho).item())
+        parts = [(infonce_loss(best_F, *b, tau, D0, soft=soft).item(), infonce_loss(best_F, *b, tau, D0, rho, soft).item())
                  for b in val_batches]
     nce, tot = map(np.mean, zip(*parts))
     return best_F.numpy(), genes, pd.DataFrame(hist), {"steps": step, "best_val_loss": best, "D0": D0, "rho": rho,
                                                        "val_infonce_part": float(nce),
-                                                       "val_anchor_share": float((tot - nce) / tot)}
+                                                       "val_anchor_share": float((tot - nce) / tot)} | ({} if soft is None else {"soft": soft})
 
 
 def anchor(cfg):
@@ -244,10 +263,27 @@ def train_cosine(cfg):
             save_actions(cfg, space, seed, F, genes, info, hist, info["tau_learned"], name="infonce_cos")
 
 
+def train_soft(cfg, scores=None, values=None):
+    """Train with the three-level labels for every score, soft value, state space and seed. The distance score keeps
+    the temperature chosen for the one-right-answer labels; the cosine score learns its own, as before."""
+    adata, splits = load_all(cfg)
+    c = cfg["infonce"]
+    taus = read_json(path(cfg, "results_dir") / "infonce" / "best_tau.json")["tau"]
+    for score in scores or ("cosine", "distance"):
+        for s in c["soft_grid"] if values is None else values:
+            for space in cfg["ot"]["spaces"]:
+                for seed in cfg["eval"]["seeds"]:
+                    tau = c["cosine"]["tau_init"] if score == "cosine" else taus[space]
+                    F, genes, hist, info = train_actions(cfg, adata, splits, space, seed, tau, score=score, soft=float(s))
+                    save_actions(cfg, space, seed, F, genes, info, hist, info.get("tau_learned", tau), name=soft_name(score, s))
+
+
 def main():
-    """Dispatch tune, train, anchor and cosine."""
+    """Dispatch tune, train, anchor, cosine and soft."""
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["tune", "train", "anchor", "cosine"])
+    ap.add_argument("what", choices=["tune", "train", "anchor", "cosine", "soft"])
+    ap.add_argument("--scores", nargs="*", choices=["cosine", "distance"], default=None, help="soft: which scores to train (default both)")
+    ap.add_argument("--values", nargs="*", type=float, default=None, help="soft: soft values to train (default config infonce.soft_grid)")
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
     ap.add_argument("--max-steps", type=int, default=None, help="override for quick smoke tests")
     ap.add_argument("--config", default=None)
@@ -257,6 +293,9 @@ def main():
         cfg["ot"]["spaces"] = a.spaces
     if a.max_steps:
         cfg["infonce"]["max_steps"] = a.max_steps
+    if a.what == "soft":
+        train_soft(cfg, a.scores, a.values)
+        return
     {"tune": tune, "train": train_all, "anchor": anchor, "cosine": train_cosine}[a.what](cfg)
 
 
