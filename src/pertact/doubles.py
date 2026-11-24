@@ -18,6 +18,7 @@ list of action sets, references and scores below was fixed before the first run 
     python -I -m pertact.doubles --split val   # the same code on validation singles; prints, writes nothing
     python -I -m pertact.doubles --split val --variant infonce_cos   # how close another stored set of vectors lands
                                                # on validation singles; writes results/infonce_cos/landing_validation*.csv
+    python -I -m pertact.doubles --split val --soft                  # the same for the soft-positive experiment's sets
 The test doubles have had their one look (2026-11-11), so --variant is refused without --split val.
 
 The validation run is a check of this code: with one gene per condition, naming the perturbation from the gem-mean
@@ -31,7 +32,7 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-from .actions import effect_tiers, mean_shift_actions
+from .actions import effect_tiers, mean_shift_actions, soft_variants
 from .config import get_logger, load_config, path
 from .data import CONTROL, cell_labels, condition_genes
 from .encoders import load_all, states
@@ -216,17 +217,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", choices=["test", "val"], default="test")
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
-    ap.add_argument("--variant", default=None, help="another stored set of learned vectors, validation singles only")
+    ap.add_argument("--variant", nargs="+", default=None, help="other stored sets of learned vectors, validation singles only")
+    ap.add_argument("--out", default=None, help="with --variant: name of the results folder (default: the last variant)")
+    ap.add_argument("--soft", action="store_true", help="the soft-positive experiment's stored sets, into results/soft_positives/")
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
-    if a.variant and a.split != "val":
-        ap.error("--variant needs --split val: the test doubles are not scored again for new variants")
+    if (a.variant or a.soft) and a.split != "val":
+        ap.error("--variant and --soft need --split val: the test doubles are not scored again for new variants")
     cfg = load_config(a.config)
+    if a.soft:
+        a.variant, a.out = soft_variants(cfg), a.out or "soft_positives"
     if a.spaces:
         cfg["ot"]["spaces"] = a.spaces
-    by_pair, summary = run(cfg, a.split, ("infonce", a.variant) if a.variant else ("infonce",))
+    by_pair, summary = run(cfg, a.split, ("infonce", *a.variant) if a.variant else ("infonce",))
     if a.variant:
-        out = path(cfg, "results_dir") / a.variant
+        out = path(cfg, "results_dir") / (a.out or a.variant[-1])
         out.mkdir(parents=True, exist_ok=True)
         summary.to_csv(out / "landing_validation.csv", index=False)
         by_pair.to_csv(out / "landing_validation_by_gene.csv", index=False)

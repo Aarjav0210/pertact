@@ -20,6 +20,10 @@ that swap lengths gene by gene (InfoNCE direction at mean-shift length, mean-shi
     python -I -m pertact.retrieval --variant infonce_cos   # the same tests for another stored set of vectors, next
                                        # to the Week 2 ones, plus both tests scored by direction alone (cosine);
                                        # writes results/infonce_cos/*.csv and leaves the Week 2 files alone
+    python -I -m pertact.retrieval --variant A B C --out NAME --lean   # several stored sets in one table, written to
+                                       # results/NAME/; --lean keeps only each set as trained and with its fitted length
+    python -I -m pertact.retrieval --soft   # the soft-positive experiment: every set of actions.soft_variants,
+                                       # lean, written to results/soft_positives/
 """
 from __future__ import annotations
 
@@ -29,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from .actions import (actions_path, calibrate_scale, effect_tiers, length_table, load_actions, mean_shift_actions,
-                      per_action_scale)
+                      per_action_scale, soft_variants)
 from .config import get_logger, load_config, path
 from .data import CONTROL, cell_labels
 from .encoders import load_all, states
@@ -121,12 +125,13 @@ def identification(cfg, adata, space, split, actions, genes, start="pooled_ot", 
 
 
 # --------------------------------------------------------------------------- every set of vectors, both tests
-def build_action_sets(cfg, adata, space, genes, ms, variants=("infonce",)):
+def build_action_sets(cfg, adata, space, genes, ms, variants=("infonce",), lean=False):
     """Every set of action vectors that is tested in one state space, keyed by (name, seed), plus the rescaling
     numbers fitted on training pairs. The references (mean shift, no action, shuffled) come first, then, for each
     seed with saved InfoNCE vectors: as trained, rescaled globally and per gene, the two length swaps, and anchored.
     `variants` names the stored sets of learned vectors to include; each gets the same rescalings and length swaps,
-    named after it (for example "infonce_cos_scaled_per_action")."""
+    named after it (for example "infonce_cos_scaled_per_action"). With `lean`, every variant other than "infonce"
+    gets only two sets, as trained and scaled per gene, which is what naming needs."""
     scale_rows = []
     rng = np.random.default_rng(cfg["seed"])
     perm = rng.permutation(len(genes))
@@ -140,6 +145,11 @@ def build_action_sets(cfg, adata, space, genes, ms, variants=("infonce",)):
                 continue
             acts = load_actions(cfg, space, seed, name)
             sets[(name, seed)] = acts
+            if lean and name != "infonce":
+                c = per_action_scale(cfg, adata, space, acts)
+                sets[(f"{name}_scaled_per_action", seed)] = {g: c[g] * v for g, v in acts.items()}
+                scale_rows += [{"space": space, "actions": name, "seed": seed, "gene": g, "c": v, "alpha": np.nan} for g, v in c.items()]
+                continue
             alpha = calibrate_scale(cfg, adata, space, acts)
             sets[(f"{name}_calibrated", seed)] = {g: alpha * v for g, v in acts.items()}
             c = per_action_scale(cfg, adata, space, acts)
@@ -163,20 +173,26 @@ def build_action_sets(cfg, adata, space, genes, ms, variants=("infonce",)):
     return sets, scale_rows
 
 
-def run_tests(cfg, variants=("infonce",)):
+def _per_gene_top1(per) -> float:
+    """Naming accuracy averaged over genes instead of cells: each gene's share of cells named right, then the mean."""
+    return float(per.assign(hit=per["rank"] <= 1).groupby("cond")["hit"].mean().mean())
+
+
+def run_tests(cfg, variants=("infonce",), out_name=None, lean=False):
     """Run both tests on every set of action vectors, in every state space, on validation cells and on training
     cells, and write the five Week 2 result tables.
 
     With other `variants` (stored sets of learned vectors, e.g. ("infonce", "infonce_cos")) the same tables go to
-    results/<last variant>/ instead, and both tests are also scored by direction alone (tasks "instance_cos" and
-    "identify_cos_<start>"), which needs no length. No test cell is read either way."""
+    results/<out_name, or the last variant>/ instead, and both tests are also scored by direction alone (tasks
+    "instance_cos" and "identify_cos_<start>"), which needs no length. Naming then also gets a per-gene average
+    ("top1_per_gene"), in which every gene counts the same however many cells it has. No test cell is read either way."""
     by_direction = tuple(variants) != ("infonce",)
     adata, splits = load_all(cfg)
     genes = sorted(splits["train_singles"])
     rows, per_rows, strength_rows, scale_rows, len_rows = [], [], [], [], []
     for space in cfg["ot"]["spaces"]:
         ms = mean_shift_actions(cfg, adata, space)
-        sets, scales = build_action_sets(cfg, adata, space, genes, ms, variants)
+        sets, scales = build_action_sets(cfg, adata, space, genes, ms, variants, lean)
         scale_rows += scales
         strength, tier = effect_tiers(adata, space, ms)
         strength_rows += [{"space": space, "gene": g, "strength": s, "tier": tier[g]} for g, s in strength.items()]
@@ -199,8 +215,10 @@ def run_tests(cfg, variants=("infonce",)):
                         per_rows.append(pp.assign(space=space, actions=name, seed=seed, start=start,
                                                   strength=pp["cond"].map(strength), tier=pp["cond"].map(tier)))
                     if by_direction:
+                        rows.append(base | {"task": f"identify_{start}", "metric": "top1_per_gene", "value": _per_gene_top1(per)})
                         m, per = identification(cfg, adata, space, split, acts, genes, start, score="cosine")
                         rows += [base | {"task": f"identify_cos_{start}", "metric": k, "value": v} for k, v in m.items()]
+                        rows.append(base | {"task": f"identify_cos_{start}", "metric": "top1_per_gene", "value": _per_gene_top1(per)})
                         per["tier"] = per["cond"].map(tier)
                         for t, g in per.groupby("tier"):
                             rows.append(base | {"task": f"identify_cos_{start}", "metric": f"top1_{t}", "value": float((g["rank"] <= 1).mean())})
@@ -214,8 +232,12 @@ def run_tests(cfg, variants=("infonce",)):
     df = pd.DataFrame(rows)
     out = path(cfg, "results_dir")
     if by_direction:  # another variant's tables get their own folder; the Week 2 files stay as they are
-        out = out / variants[-1]
+        out = out / (out_name or variants[-1])
         out.mkdir(parents=True, exist_ok=True)
+        v = df[(df.split == "val") & (((df.task.str.startswith("identify")) & df.metric.isin(["top1", "top1_per_gene"]))
+                                      | (df.task.isin(["instance", "instance_cos"]) & (df.metric == "mrr")))]
+        table = v.pivot_table(index=["space", "actions"], columns=["task", "metric"], values="value", sort=False)
+        log.info("validation cells, mean over seeds:\n%s", table.round(3).to_string())
     name = (lambda k: f"{k}.csv") if by_direction else (lambda k: f"week2_{k}.csv")
     df.to_csv(out / name("retrieval"), index=False)
     pd.concat(per_rows).to_csv(out / name("identification_by_pert"), index=False)
@@ -230,14 +252,19 @@ def main():
     """Run both tests on every saved set of action vectors."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
-    ap.add_argument("--variant", default=None, help="another stored set of learned vectors to test next to the Week 2 "
-                    "InfoNCE ones, e.g. infonce_cos; results go to results/<variant>/")
+    ap.add_argument("--variant", nargs="+", default=None, help="other stored sets of learned vectors to test next to the "
+                    "Week 2 InfoNCE ones, e.g. infonce_cos; results go to results/<--out, or the last variant>/")
+    ap.add_argument("--out", default=None, help="with --variant: name of the results folder")
+    ap.add_argument("--lean", action="store_true", help="with --variant: only as trained and scaled per gene for each of them")
+    ap.add_argument("--soft", action="store_true", help="the soft-positive experiment: its stored sets, lean, into results/soft_positives/")
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
     cfg = load_config(a.config)
     if a.spaces:
         cfg["ot"]["spaces"] = a.spaces
-    run_tests(cfg, ("infonce", a.variant) if a.variant else ("infonce",))
+    if a.soft:
+        a.variant, a.out, a.lean = soft_variants(cfg), a.out or "soft_positives", True
+    run_tests(cfg, ("infonce", *a.variant) if a.variant else ("infonce",), a.out, a.lean)
 
 
 if __name__ == "__main__":
