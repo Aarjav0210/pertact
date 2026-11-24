@@ -1,0 +1,12 @@
+{
+ "steps": 1400,
+ "best_val_loss": 10.883477544784546,
+ "D0": 120.5400390625,
+ "rho": 0.0,
+ "val_infonce_part": 10.883477544784546,
+ "val_anchor_share": 0.0,
+ "soft": 0.1,
+ "tau": 0.03,
+ "space": "X_pca_g",
+ "seed": 0
+}
