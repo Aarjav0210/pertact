@@ -1,0 +1,14 @@
+{
+ "steps": 2100,
+ "best_val_loss": 3.9983903408050536,
+ "D0": 119.4917221069336,
+ "score": "cosine",
+ "tau_start": 0.07,
+ "tau_learned": 0.07260545343160629,
+ "start": "ot",
+ "set_size": 1,
+ "projection": "white",
+ "tau": 0.07260545343160629,
+ "space": "X_pca_g",
+ "seed": 1
+}
