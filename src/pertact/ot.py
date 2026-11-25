@@ -122,6 +122,15 @@ def start_states(S, pairs) -> np.ndarray:
     return (S[pairs["partners"]] * pairs["weights"][..., None]).sum(1)
 
 
+def gem_mean_states(cfg, adata, S, split, cells) -> np.ndarray:
+    """A start that needs no pairing: for each of the given cells, the mean state of the split's control cells in
+    its gem group."""
+    cond, gem, cell_split = cell_labels(adata.obs, cfg["data"]["batch_key"])
+    ctrl = (cell_split == split) & (cond == CONTROL)
+    mu = {g: S[ctrl & (gem == g)].mean(0) for g in np.unique(gem[cells])}
+    return np.stack([mu[g] for g in gem[cells]])
+
+
 # --------------------------------------------------------------------------- checks
 def check(cfg):
     """Two checks of the pairing on synthetic clouds: a known shift is recovered, and moving the controls does not

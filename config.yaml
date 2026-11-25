@@ -103,6 +103,11 @@ infonce:
   # Week 4, soft positives: value given to the other cells of a query's perturbation (its own partner is 1, cells of
   # other perturbations 0). 0 is the one-right-answer labelling; 1 ignores the pairing. Every value is trained and reported.
   soft_grid: [0, 0.03, 0.1, 0.3, 1.0]
+  # Week 5, naming table: the cosine loss with one thing changed at a time (actions.TABLE_RUNS).
+  set_size: 64                     # cells averaged into one training example in the "set" runs
+  projection:
+    lr: 0.005                      # step size of the trained projection: a tenth of the vectors'. A guess, not tuned.
+  naming_sets_per_gene: 20         # sets of validation cells drawn per gene when a perturbation is named from a set
 
 decoder:
   state_key: X_pca_g               # frozen control-state embedding fed to enc()

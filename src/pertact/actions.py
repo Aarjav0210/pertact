@@ -11,7 +11,14 @@ import pandas as pd
 
 from .config import path, write_json
 from .encoders import scale_D0, states
-from .ot import load_pairs, start_states
+from .ot import gem_mean_states, load_pairs, start_states
+
+# The naming table (Week 5): the cosine loss with one thing changed at a time. Each run is (start, cells per training
+# example, projection). start: "ot" = the cell's own OT partners, "ctrl_mean" = the mean control of its gem group.
+# projection: None, "white" (computed from the training cells, not trained) or "train" (learned with the vectors).
+# ("ot", 1, None) is the cosine run itself, stored as "infonce_cos"; it is read, not trained again.
+TABLE_RUNS = [("ot", 1, "white"), ("ot", 1, "train"), ("ctrl_mean", 1, None), ("ctrl_mean", 1, "train"),
+              ("ctrl_mean", "set", None), ("ctrl_mean", "set", "train")]
 
 
 # --------------------------------------------------------------------------- storage
@@ -32,20 +39,66 @@ def soft_variants(cfg) -> list[str]:
     return ["infonce_cos"] + [soft_name(score, s) for score in ("cosine", "distance") for s in cfg["infonce"]["soft_grid"]]
 
 
+def table_name(cfg, start, set_size, projection) -> str:
+    """Name under which one run of the naming table is stored, for example "infonce_cos_cm_set64_proj": "_cm" for the
+    gem-group mean start, "_set<n>" for training examples that average n cells, "_white" / "_proj" for the computed
+    and the trained projection. `set_size` is a number or "set", which stands for config infonce.set_size."""
+    n = cfg["infonce"]["set_size"] if set_size == "set" else set_size
+    return ("infonce_cos" + ("_cm" if start == "ctrl_mean" else "") + (f"_set{n}" if n > 1 else "")
+            + {None: "", "white": "_white", "train": "_proj"}[projection])
+
+
+def table_variants(cfg) -> list[str]:
+    """Every stored set of the naming table: the cosine vectors themselves, then each run of TABLE_RUNS."""
+    return ["infonce_cos"] + [table_name(cfg, *run) for run in TABLE_RUNS]
+
+
 def load_actions(cfg, space, seed, name="infonce") -> dict[str, np.ndarray]:
     """One saved set of action vectors as {gene: vector}."""
     z = np.load(actions_path(cfg, space, seed, name))
     return dict(zip(z["genes"].tolist(), z["emb"]))
 
 
+def load_projection(cfg, space, seed, name):
+    """The projection stored with one set of vectors (rows = projected directions), or None if it has none. Vectors
+    stored with a projection live in the projected space and are compared with the projected displacement."""
+    z = np.load(actions_path(cfg, space, seed, name))
+    return z["proj"] if "proj" in z.files else None
+
+
 def save_actions(cfg, space, seed, F, genes, info, hist, tau, name="infonce"):
-    """Write one trained set of action vectors, its training history and its settings."""
-    np.savez(actions_path(cfg, space, seed, name), emb=F.astype(np.float32), genes=np.array(genes, dtype=str), missing=np.array([], dtype=str))
+    """Write one trained set of action vectors, its training history and its settings. A projection returned by the
+    training (info["proj"]) is stored next to the vectors."""
+    info = dict(info)
+    proj = info.pop("proj", None)
+    extra = {} if proj is None else {"proj": np.asarray(proj, dtype=np.float32)}
+    np.savez(actions_path(cfg, space, seed, name), emb=F.astype(np.float32), genes=np.array(genes, dtype=str),
+             missing=np.array([], dtype=str), **extra)
     d = path(cfg, "results_dir") / "infonce"
     d.mkdir(parents=True, exist_ok=True)
     tag = "" if name == "infonce" else f"{name}__"
     hist.to_csv(d / f"history__{tag}{space}__s{seed}.csv", index=False)
     write_json(info | {"tau": tau, "space": space, "seed": seed}, d / f"info__{tag}{space}__s{seed}.json")
+
+
+# --------------------------------------------------------------------------- displacements and the computed projection
+def displacements(cfg, adata, space, split, start):
+    """Cell minus start for every single-perturbed cell of a split, with its gene. The start is "ot" (the cell's own
+    OT partners; those pairs were made per perturbation, so this start uses the label and is for training cells),
+    "pooled_ot" (partners from the pairing made without labels) or "ctrl_mean" (the mean control of its gem group)."""
+    S = states(adata, space)
+    z = load_pairs(cfg, space, split, pooled=start != "ot")
+    s0 = gem_mean_states(cfg, adata, S, split, z["cell"]) if start == "ctrl_mean" else start_states(S, z)
+    return (S[z["cell"]] - s0).astype(np.float64), z["cond"]
+
+
+def whitening(cfg, adata, space, start) -> np.ndarray:
+    """The computed projection: the rescaling linear discriminant analysis applies before it compares a displacement
+    with the gene centres. It shrinks the directions in which cells of one gene are spread widely. Fitted with
+    scikit-learn on the training cells' displacements only; rows are the projected directions."""
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+    X, y = displacements(cfg, adata, space, "train", start)
+    return LinearDiscriminantAnalysis().fit(X, y).scalings_.T.astype(np.float32)
 
 
 # --------------------------------------------------------------------------- the reference and the rescalings

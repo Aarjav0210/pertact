@@ -29,6 +29,13 @@ parameter learned with the vectors, as in CLIP (it starts at cosine.tau_init and
     python -I -m pertact.infonce anchor    # rho grid (seed 0, training-pair length ratio), then every space × seed
     python -I -m pertact.infonce cosine    # the cosine, unit-length variant: every space × seed
     python -I -m pertact.infonce soft      # soft-positive labels: both scores × every value of soft_grid × space × seed
+    python -I -m pertact.infonce table     # the naming table: the cosine loss with one thing changed at a time
+
+Naming table (Week 5). Three switches of the cosine loss, each a run of actions.TABLE_RUNS, scored by pertact.naming:
+the start (a cell's OT partner, or the mean control of its gem group, which needs no pairing), the training example
+(one cell, or the average of infonce.set_size cells of a perturbation), and a projection of the displacement (none,
+the computed whitening, or a square matrix trained with the vectors from the identity). With a projection the vectors
+live in the projected space, so those sets are for naming only and are read by pertact.naming alone.
 
 Soft positives (Week 4). With the labels above, the K-1 other cells of a query's perturbation are wrong answers, exactly
 like the cells of other perturbations. `soft_targets` gives three levels instead: 1 for the query's own OT partner, s
@@ -49,19 +56,20 @@ import numpy as np
 import pandas as pd
 import torch
 
-from .actions import length_ratio, save_actions, soft_name
+from .actions import TABLE_RUNS, length_ratio, save_actions, soft_name, table_name, whitening
 from .config import VAL_SEED_OFFSET, get_logger, load_config, path, read_json, seed_everything, write_json
 from .encoders import load_all, scale_D0
-from .ot import load_pairs
+from .ot import gem_mean_states, load_pairs
 from .retrieval import instance_retrieval
 
 log = get_logger("infonce")
 
 
 class PairData:
-    """OT pairs of one split in one state space, grouped by perturbation."""
+    """OT pairs of one split in one state space, grouped by perturbation. With `adata` given, the start of a cell is
+    the mean control of its gem group instead of one of its OT partners (no pairing is used)."""
 
-    def __init__(self, cfg, S: np.ndarray, space: str, split: str, genes: list[str]):
+    def __init__(self, cfg, S: np.ndarray, space: str, split: str, genes: list[str], adata=None):
         z = load_pairs(cfg, space, split)
         self.S = torch.as_tensor(S, dtype=torch.float32)
         self.gidx = {g: i for i, g in enumerate(genes)}
@@ -69,17 +77,29 @@ class PairData:
         self.a = np.array([self.gidx[c] for c in z["cond"]])
         self.partners, self.cum = z["partners"], np.cumsum(z["weights"], axis=1)
         self.by_pert = [np.flatnonzero(self.a == i) for i in range(len(genes))]
+        self.ctrl_mean = None if adata is None else torch.as_tensor(gem_mean_states(cfg, adata, S, split, self.cell), dtype=torch.float32)
 
-    def batch(self, rng, P, K):
-        """One batch: P perturbations with K pairs each. For every perturbed cell, one of its partner controls is drawn
-        with probability equal to its OT weight. Returns control states, perturbed-cell states and gene indices."""
+    def batch(self, rng, P, K, set_size=1):
+        """One batch: P perturbations with K examples each. An example is one perturbed cell with its start: one of
+        its partner controls, drawn with probability equal to its OT weight, or the mean control of its gem group.
+        With set_size > 1 an example is the average of that many cells of the perturbation and of their starts.
+        Returns start states, perturbed states and gene indices."""
         perts = rng.choice([i for i, ix in enumerate(self.by_pert) if len(ix)], size=P, replace=False)
-        rows = np.concatenate([rng.choice(self.by_pert[p], size=K, replace=len(self.by_pert[p]) < K) for p in perts])
-        u = rng.random(len(rows))[:, None]
-        pick = (u > self.cum[rows]).sum(1).clip(max=self.partners.shape[1] - 1)  # sample a partner from OT weights
-        ctrl = self.partners[rows, pick]
-        return (self.S[torch.as_tensor(ctrl)], self.S[torch.as_tensor(self.cell[rows])],
-                torch.as_tensor(self.a[rows]))
+        if set_size == 1:
+            rows = np.concatenate([rng.choice(self.by_pert[p], size=K, replace=len(self.by_pert[p]) < K) for p in perts])
+        else:  # K sets per perturbation; the cells of one set are distinct whenever the perturbation has enough cells
+            rows = np.concatenate([rng.choice(self.by_pert[p], size=set_size, replace=len(self.by_pert[p]) < set_size)
+                                   for p in perts for _ in range(K)])
+        if self.ctrl_mean is None:
+            u = rng.random(len(rows))[:, None]
+            pick = (u > self.cum[rows]).sum(1).clip(max=self.partners.shape[1] - 1)  # sample a partner from OT weights
+            start = self.S[torch.as_tensor(self.partners[rows, pick])]
+        else:
+            start = self.ctrl_mean[torch.as_tensor(rows)]
+        pert, a = self.S[torch.as_tensor(self.cell[rows])], torch.as_tensor(self.a[rows])
+        if set_size > 1:
+            start, pert, a = start.view(-1, set_size, start.shape[1]).mean(1), pert.view(-1, set_size, pert.shape[1]).mean(1), a[::set_size]
+        return start, pert, a
 
 
 def soft_targets(a, s):
@@ -105,51 +125,72 @@ def infonce_loss(F, s_ctrl, s_pert, a, tau, D0, rho=0.0, soft=None):
     return loss
 
 
-def cosine_infonce_loss(F, s_ctrl, s_pert, a, tau, soft=None):
+def cosine_infonce_loss(F, s_ctrl, s_pert, a, tau, soft=None, proj=None):
     """The cosine loss of one batch (CLIP-style): each action vector against the displacement from its own control
     to every perturbed cell of the batch, both at unit length, symmetric over rows and columns. The length of F
-    has no effect, so only the temperature tau sets how sharp the contrast is. `soft` as in infonce_loss."""
+    has no effect, so only the temperature tau sets how sharp the contrast is. `soft` as in infonce_loss.
+    `proj` (a matrix, rows = projected directions) is applied to every displacement before it is compared; projecting
+    a displacement is the same as projecting both cells and subtracting. The vectors then live in the projected space."""
     f = torch.nn.functional.normalize(F[a], dim=1)
-    disp = torch.nn.functional.normalize(s_pert[None, :, :] - s_ctrl[:, None, :], dim=2)   # [n, m]: control n -> cell m
+    disp = s_pert[None, :, :] - s_ctrl[:, None, :]                                          # [n, m]: control n -> cell m
+    disp = torch.nn.functional.normalize(disp if proj is None else disp @ proj.T, dim=2)
     L = (disp * f[:, None, :]).sum(2) / tau
     y = torch.arange(len(a)) if soft is None else soft_targets(a, soft)
     return 0.5 * (torch.nn.functional.cross_entropy(L, y) + torch.nn.functional.cross_entropy(L.T, y))
 
 
-def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, score="distance", soft=None):
+def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, score="distance", soft=None,
+                  start="ot", set_size=1, projection=None):
     """Learn one action vector per gene in one state space. The vectors start at zero and are the only thing trained.
     Training stops when the loss on fixed validation batches has not improved for `patience` checks; the best
     vectors are returned with their genes, the loss history and a summary.
 
     With score="cosine" the cosine loss is used instead: the vectors start from random directions (zero has no
     direction), `tau` is the starting temperature and is learned with them, and the vectors come back at unit length.
-    `soft` (a number s) trains and validates with the three-level labels of `soft_targets` instead of one right answer."""
+    `soft` (a number s) trains and validates with the three-level labels of `soft_targets` instead of one right answer.
+
+    The naming table changes one thing at a time (cosine score only for the projection):
+    `start`      "ot": a cell starts from one of its OT partners; "ctrl_mean": from the mean control of its gem group.
+    `set_size`   cells of one perturbation averaged into one training example (1 = single cells).
+    `projection` None; "white": the displacement is first rescaled by the fixed, computed `whitening`; "train": by a
+                 square matrix that starts as the identity and is learned with the vectors. The projection that
+                 goes with the returned vectors is in the summary under "proj"."""
     c = cfg["infonce"]
     seed_everything(seed)
     rng = np.random.default_rng(seed)
     genes = sorted(splits["train_singles"])
     S = np.asarray(adata.obsm[space], dtype=np.float32)
-    tr = PairData(cfg, S, space, "train", genes)
-    va = PairData(cfg, S, space, "val", genes)
+    tr = PairData(cfg, S, space, "train", genes, adata if start == "ctrl_mean" else None)
+    va = PairData(cfg, S, space, "val", genes, adata if start == "ctrl_mean" else None)
     D0 = scale_D0(S[(adata.obs["split"] == "train").to_numpy()], seed)
     vrng = np.random.default_rng(VAL_SEED_OFFSET + seed)
-    val_batches = [va.batch(vrng, c["P"], c["K"]) for _ in range(c["n_val_batches"])]
+    val_batches = [va.batch(vrng, c["P"], c["K"], set_size) for _ in range(c["n_val_batches"])]
     cosine = score == "cosine"
+    if projection is not None and not cosine:
+        raise ValueError("the projection is defined for the cosine score only")
+    proj = None
     if cosine:
         cc = c["cosine"]
-        F = torch.randn(len(genes), S.shape[1]).requires_grad_()
+        if projection == "white":
+            proj = torch.as_tensor(whitening(cfg, adata, space, start))
+        elif projection == "train":
+            proj = torch.eye(S.shape[1]).requires_grad_()
+        F = torch.randn(len(genes), S.shape[1] if proj is None else proj.shape[0]).requires_grad_()
         log_tau = torch.tensor(float(np.log(tau)), requires_grad=True)
         tau_now = lambda: log_tau.exp().clamp(min=cc["tau_min"])
-        batch_loss = lambda sc, sp, a: cosine_infonce_loss(F, sc, sp, a, tau_now(), soft)
-        opt = torch.optim.Adam([F, log_tau] if cc["learn_tau"] else [F], lr=c["lr"])
+        batch_loss = lambda sc, sp, a: cosine_infonce_loss(F, sc, sp, a, tau_now(), soft, proj)
+        groups = [{"params": [F, log_tau] if cc["learn_tau"] else [F]}]
+        if projection == "train":
+            groups.append({"params": [proj], "lr": c["projection"]["lr"]})
+        opt = torch.optim.Adam(groups, lr=c["lr"])
     else:
         F = torch.zeros(len(genes), S.shape[1], requires_grad=True)
         batch_loss = lambda sc, sp, a: infonce_loss(F, sc, sp, a, tau, D0, rho, soft)
         opt = torch.optim.Adam([F], lr=c["lr"])
-    best, best_F, best_tau, bad, hist = np.inf, None, tau, 0, []
+    best, best_F, best_tau, best_proj, bad, hist = np.inf, None, tau, None, 0, []
     t0 = time.time()
     for step in range(1, c["max_steps"] + 1):
-        sc, sp, a = tr.batch(rng, c["P"], c["K"])
+        sc, sp, a = tr.batch(rng, c["P"], c["K"], set_size)
         loss = batch_loss(sc, sp, a)
         opt.zero_grad()
         loss.backward()
@@ -161,6 +202,7 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, s
             if vl < best - 1e-4:
                 best, best_F, bad = vl, F.detach().clone(), 0
                 best_tau = tau_now().item() if cosine else tau
+                best_proj = None if proj is None else proj.detach().clone()
             else:
                 bad += 1
             if bad >= c["patience"]:
@@ -169,11 +211,14 @@ def train_actions(cfg, adata, splits, space, seed, tau, verbose=True, rho=0.0, s
         raise RuntimeError(f"no validation check ran in {step} steps: max_steps must be at least eval_every ({c['eval_every']})")
     if cosine:
         if verbose:
-            log.info("%s seed %d cosine: %d steps, best val loss %.4f (chance %.4f), temperature %.3g -> %.4f, %.0fs", space,
-                     seed, step, best, np.log(c["P"] * c["K"]), tau, best_tau, time.time() - t0)
+            log.info("%s seed %d cosine%s: %d steps, best val loss %.4f (chance %.4f), temperature %.3g -> %.4f, %.0fs", space, seed,
+                     "" if (start, set_size, projection) == ("ot", 1, None) else f" [start {start}, {set_size} cell(s) per example, projection {projection}]",
+                     step, best, np.log(c["P"] * c["K"]), tau, best_tau, time.time() - t0)
         unit = torch.nn.functional.normalize(best_F, dim=1).numpy()
-        return unit, genes, pd.DataFrame(hist), {"steps": step, "best_val_loss": best, "D0": D0, "score": "cosine",
-                                                 "tau_start": tau, "tau_learned": best_tau} | ({} if soft is None else {"soft": soft})
+        extra = ({} if soft is None else {"soft": soft}) | ({} if (start, set_size, projection) == ("ot", 1, None) else
+                                                             {"start": start, "set_size": set_size, "projection": str(projection)})
+        return unit, genes, pd.DataFrame(hist), {"steps": step, "best_val_loss": best, "D0": D0, "score": "cosine", "tau_start": tau,
+                                                 "tau_learned": best_tau} | extra | ({} if best_proj is None else {"proj": best_proj.numpy()})
     if verbose:
         log.info("%s seed %d tau %.3g rho %.3g: %d steps, best val loss %.4f (chance %.4f), %.0fs", space, seed, tau,
                  rho, step, best, np.log(c["P"] * c["K"]), time.time() - t0)
@@ -278,10 +323,29 @@ def train_soft(cfg, scores=None, values=None):
                     save_actions(cfg, space, seed, F, genes, info, hist, info.get("tau_learned", tau), name=soft_name(score, s))
 
 
+def train_table(cfg, only=None):
+    """Train the runs of the naming table (actions.TABLE_RUNS) for every state space and seed: the cosine loss with
+    another start, with sets of cells as training examples, and with a computed or a trained projection. `only`
+    names the stored sets to train (default all)."""
+    adata, splits = load_all(cfg)
+    c = cfg["infonce"]
+    for start, set_size, projection in TABLE_RUNS:
+        name = table_name(cfg, start, set_size, projection)
+        if only and name not in only:
+            continue
+        n = c["set_size"] if set_size == "set" else set_size
+        for space in cfg["ot"]["spaces"]:
+            for seed in cfg["eval"]["seeds"]:
+                F, genes, hist, info = train_actions(cfg, adata, splits, space, seed, c["cosine"]["tau_init"], score="cosine",
+                                                     start=start, set_size=n, projection=projection)
+                save_actions(cfg, space, seed, F, genes, info, hist, info["tau_learned"], name=name)
+
+
 def main():
-    """Dispatch tune, train, anchor, cosine and soft."""
+    """Dispatch tune, train, anchor, cosine, soft and table."""
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["tune", "train", "anchor", "cosine", "soft"])
+    ap.add_argument("what", choices=["tune", "train", "anchor", "cosine", "soft", "table"])
+    ap.add_argument("--only", nargs="*", default=None, help="table: stored sets to train, by name (default every run of the table)")
     ap.add_argument("--scores", nargs="*", choices=["cosine", "distance"], default=None, help="soft: which scores to train (default both)")
     ap.add_argument("--values", nargs="*", type=float, default=None, help="soft: soft values to train (default config infonce.soft_grid)")
     ap.add_argument("--spaces", nargs="*", default=None, help="override config ot.spaces")
@@ -295,6 +359,9 @@ def main():
         cfg["infonce"]["max_steps"] = a.max_steps
     if a.what == "soft":
         train_soft(cfg, a.scores, a.values)
+        return
+    if a.what == "table":
+        train_table(cfg, a.only)
         return
     {"tune": tune, "train": train_all, "anchor": anchor, "cosine": train_cosine}[a.what](cfg)
 
